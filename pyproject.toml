@@ -1,0 +1,40 @@
+[project]
+dynamic = ["version", "readme", "dependencies"]
+license = {file = "LICENCE"}
+name = "temporary-python-project"
+requires-python = ">=3.11"
+
+[tool.setuptools.dynamic]
+dependencies = {file = "requirements.txt"}
+readme = {file = "README.md"}
+version = {attr = "temporary_python_project.__version__"}
+
+[project.optional-dependencies]
+all = ["temporary-python-project[dev]"]
+dev = ["pip-tools", "ruff", "temporary-python-project[test]"]
+test = ["pytest", "pytest-cov"]
+
+[tool.setuptools.package-dir]
+"temporary_python_project" = "temporary_python_project"
+
+[tool.pytest.ini_options]
+addopts = [
+  "-vv",
+  "-s",
+]
+
+[tool.coverage.run]
+parallel = true
+
+[tool.ruff.lint]
+pydocstyle = {convention = 'google'}
+select = [
+  "E",
+  "W",
+  "F",
+  "I",
+  "B",
+  "C4",
+  "UP",
+  "D",
+]

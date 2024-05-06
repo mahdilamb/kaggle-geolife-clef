@@ -1,0 +1,105 @@
+name: Check version changed
+on:
+  push:
+    branches-ignore: "main"
+
+jobs:
+  check-version:
+    if: ${{github.repository != 'mahdilamb/python-template'}}
+    name: Check version changed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Check version of ${{ github.ref }}
+        id: push-version
+        run: |
+          VERSION=$(python3 <<EOF
+          import importlib
+          import tomllib
+
+          with open("pyproject.toml", "rb") as fp:
+              data = tomllib.load(fp)
+              if version := data["project"].get("version"):
+                  print(version)
+              elif "version" in data["project"].get("dynamic", ()):
+                  how, where = next(
+                      iter(data["tool"]["setuptools"]["dynamic"]["version"].items())
+                  )
+                  if how == "attr":
+                      module_name, attr = where.rsplit(".", maxsplit=1)
+                      module = importlib.import_module(module_name)
+                      print(getattr(module, attr))
+          EOF
+          )
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "${VERSION}"
+      - name: Checkout version of main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Check version of main
+        id: main-version
+        run: |
+          VERSION=$(python3 <<EOF
+          import importlib
+          import tomllib
+
+          with open("pyproject.toml", "rb") as fp:
+              data = tomllib.load(fp)
+              if version := data["project"].get("version"):
+                  print(version)
+              elif "version" in data["project"].get("dynamic", ()):
+                  how, where = next(
+                      iter(data["tool"]["setuptools"]["dynamic"]["version"].items())
+                  )
+                  if how == "attr":
+                      module_name, attr = where.rsplit(".", maxsplit=1)
+                      module = importlib.import_module(module_name)
+                      print(getattr(module, attr))
+          EOF
+          )
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "${VERSION}"
+      - name: Post error message
+        if: ${{steps.main-version.outputs.version == steps.push-version.outputs.version}}
+        run: |
+          echo "::error::Version has not changed (${{steps.main-version.outputs.version}})."
+          exit 1
+      - name: Post summary
+        run: |
+          CHANGE_IN=$(python3 <<EOF
+          import re
+          from typing import Literal, TypeAlias, get_args
+
+          SemverAttribute: TypeAlias = Literal[
+              "major",
+              "minor",
+              "patch",
+              "prerelease",
+              "buildmetadata",
+          ]
+          SEMVER_PATTERN = re.compile(
+              r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
+          )
+
+          def change(new: str, old: str) -> SemverAttribute:
+              for group, new_val, old_val in zip(
+                  get_args(SemverAttribute),
+                  next(SEMVER_PATTERN.finditer(new)).groups(),
+                  next(SEMVER_PATTERN.finditer(old)).groups(),
+              ):
+                  if old_val != new_val:
+                      return group
+              raise ValueError("New and old versions are the same!")
+
+          print(change("${{steps.push-version.outputs.version}}", "${{steps.main-version.outputs.version}}"))
+          EOF
+          )
+          echo 'Version changed from `${{steps.main-version.outputs.version}}` to `${{steps.push-version.outputs.version}}`. `'$CHANGE_IN'` release' >> $GITHUB_STEP_SUMMARY
