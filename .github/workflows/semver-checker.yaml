@@ -5,7 +5,6 @@ on:
 
 jobs:
   check-version:
-    if: ${{github.repository != 'mahdilamb/python-template'}}
     name: Check version changed
     runs-on: ubuntu-latest
     steps:

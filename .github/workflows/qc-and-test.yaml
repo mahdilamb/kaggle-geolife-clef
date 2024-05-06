@@ -4,7 +4,6 @@ on:
 
 jobs:
   qc-and-test:
-    if: ${{github.repository != 'mahdilamb/python-template'}}
     name: "QC and test"
     runs-on: ubuntu-latest
     steps:
@@ -18,9 +17,9 @@ jobs:
 
       - name: Unit tests [pytest]
         run: |
-          pytest --cov=temporary_python_project --cov-report term-missing
+          pytest --cov=geolife_clef_2024 --cov-report term-missing
           coverage report --format=markdown -m >> $GITHUB_STEP_SUMMARY
 
       - name: QC [ruff]
         if: ${{!cancelled()}}
-        run: ruff check temporary_python_project
+        run: ruff check geolife_clef_2024

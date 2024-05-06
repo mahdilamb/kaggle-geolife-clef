@@ -1,7 +1,7 @@
 .PHONY: help requirements install install-all qc test ruff mypy prune-branches
 default: help
 
-PACKAGE_DIR=temporary_python_project
+PACKAGE_DIR=geolife_clef_2024
 SRC_FILES=${PACKAGE_DIR} tests
 
 REQUIREMENTS_SUFFIX=$(shell [ -z ${extras} ] || echo '-${extras}')

@@ -1,21 +1,21 @@
 [project]
 dynamic = ["version", "readme", "dependencies"]
 license = {file = "LICENCE"}
-name = "temporary-python-project"
+name = "geolife-clef-2024"
 requires-python = ">=3.11"
 
 [tool.setuptools.dynamic]
 dependencies = {file = "requirements.txt"}
 readme = {file = "README.md"}
-version = {attr = "temporary_python_project.__version__"}
+version = {attr = "geolife_clef_2024.__version__"}
 
 [project.optional-dependencies]
-all = ["temporary-python-project[dev]"]
-dev = ["pip-tools", "ruff", "temporary-python-project[test]"]
+all = ["geolife-clef-2024[dev]"]
+dev = ["pip-tools", "ruff", "geolife-clef-2024[test]"]
 test = ["pytest", "pytest-cov"]
 
 [tool.setuptools.package-dir]
-"temporary_python_project" = "temporary_python_project"
+"geolife_clef_2024" = "geolife_clef_2024"
 
 [tool.pytest.ini_options]
 addopts = [
