@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 /requirements.in.md5
 /pyproject.toml.*.md5
+/data/

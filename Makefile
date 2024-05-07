@@ -1,4 +1,4 @@
-.PHONY: help requirements install install-all qc test ruff mypy prune-branches
+.PHONY: help requirements install install-all qc test ruff mypy prune-branches dataset
 default: help
 
 PACKAGE_DIR=geolife_clef_2024
@@ -34,6 +34,9 @@ prune-branches: # Remove all branches except one
 	@git branch | grep -v "${except}" | xargs git branch -D
 
 prune-branches: except=main
+
+dataset: # Download the dataset
+	@./scripts/download_dataset.sh
 
 help: # Show help for each of the Makefile recipes.
 	@grep -E '^[a-zA-Z0-9 -]+:.*#'  Makefile | sort | while read -r l; do printf "\033[1;32m$$(echo $$l | cut -f 1 -d':')\033[00m\n\t$$(echo $$l | cut -f 2- -d'#')\n"; done
