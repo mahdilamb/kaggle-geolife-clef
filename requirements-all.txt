@@ -278,7 +278,7 @@ jupyter-server-terminals==0.5.3
     #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-server
     #   jupyter-utils
-jupyter-utils @ git+ssh://git@github.com/mahdilamb/jupyter-utils@v0.1.0
+jupyter-utils @ git+ssh://git@github.com/mahdilamb/jupyter-utils@v0.3.2
     # via
     #   geolife-clef-2024
     #   geolife-clef-2024 (pyproject.toml)

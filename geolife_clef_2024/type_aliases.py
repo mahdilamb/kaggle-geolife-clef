@@ -1,3 +1,5 @@
+"""Type aliases used throughout the package."""
+
 from typing import Literal, TypeAlias
 
 Dataset: TypeAlias = Literal["train", "test"]

@@ -13,7 +13,9 @@ jobs:
           python-version: "3.11"
           cache: "pip"
       - name: Install dependencies
-        run: pip install -e .[all]
+        run: |
+          git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
+          pip install -e .[all]
 
       - name: Unit tests [pytest]
         run: |
