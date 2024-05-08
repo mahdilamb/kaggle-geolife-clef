@@ -10,10 +10,10 @@ readme = {file = "README.md"}
 version = {attr = "geolife_clef_2024.__version__"}
 
 [project.optional-dependencies]
-all = ["geolife-clef-2024[dev]"]
+all = ["geolife-clef-2024[dev,eda]"]
 dev = ["pip-tools", "ruff", "geolife-clef-2024[test]"]
+eda = ['plotly', 'kaleido', 'seaborn']
 test = ["pytest", "pytest-cov"]
-
 [tool.setuptools.package-dir]
 "geolife_clef_2024" = "geolife_clef_2024"
 
