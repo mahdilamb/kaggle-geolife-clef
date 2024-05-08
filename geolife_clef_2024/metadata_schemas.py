@@ -4,11 +4,56 @@ from collections.abc import Mapping
 from types import MappingProxyType
 
 import polars as pl
+from polars import type_aliases as pl_types
+from geolife_clef_2024 import type_aliases
 
-from geolife_clef_2024 import _type_aliases
-
+COUNTRIES = pl.Enum(
+    (
+        "Portugal",
+        "France",
+        "Greece",
+        "Serbia",
+        "Slovakia",
+        "Bulgaria",
+        "Norway",
+        "Slovenia",
+        "Monaco",
+        "Czech Republic",
+        "Switzerland",
+        "Bosnia and Herzegovina",
+        "Croatia",
+        "Netherlands",
+        "Poland",
+        "Andorra",
+        "Germany",
+        "Belgium",
+        "Hungary",
+        "Spain",
+        "Italy",
+        "Romania",
+        "Luxembourg",
+        "Ireland",
+        "Montenegro",
+        "Latvia",
+        "The former Yugoslav Republic of Macedonia",
+        "Austria",
+        "Denmark",
+    )
+)
+REGIONS = pl.Enum(
+    (
+        "ALPINE",
+        "ATLANTIC",
+        "BLACK SEA",
+        "BOREAL",
+        "CONTINENTAL",
+        "MEDITERRANEAN",
+        "PANNONIAN",
+        "STEPPIC",
+    )
+)
 P0_TRAIN: Mapping[
-    _type_aliases.P0Feature | _type_aliases.TargetFeature, pl.PolarsDataType
+    type_aliases.P0Feature | type_aliases.TargetFeature, pl.PolarsDataType
 ] = MappingProxyType(
     {
         "publisher": pl.Enum(
@@ -42,7 +87,7 @@ P0_TRAIN: Mapping[
     }
 )
 PA_TEST: Mapping[
-    _type_aliases.PAFeature | _type_aliases.TargetFeature, pl.PolarsDataType
+    type_aliases.PAFeature | type_aliases.TargetFeature, pl.PolarsDataType
 ] = MappingProxyType(
     {
         "lon": pl.Float64,
@@ -50,57 +95,14 @@ PA_TEST: Mapping[
         "year": pl.Int64,
         "geoUncertaintyInM": pl.Float64,
         "areaInM2": pl.Float64,
-        "region": pl.Enum(
-            (
-                "ALPINE",
-                "ATLANTIC",
-                "BLACK SEA",
-                "BOREAL",
-                "CONTINENTAL",
-                "MEDITERRANEAN",
-                "PANNONIAN",
-                "STEPPIC",
-            )
-        ),
-        "country": pl.Enum(
-            (
-                "Portugal",
-                "France",
-                "Greece",
-                "Serbia",
-                "Slovakia",
-                "Bulgaria",
-                "Norway",
-                "Slovenia",
-                "Monaco",
-                "Czech Republic",
-                "Switzerland",
-                "Bosnia and Herzegovina",
-                "Croatia",
-                "Netherlands",
-                "Poland",
-                "Andorra",
-                "Germany",
-                "Belgium",
-                "Hungary",
-                "Spain",
-                "Italy",
-                "Romania",
-                "Luxembourg",
-                "Ireland",
-                "Montenegro",
-                "Latvia",
-                "The former Yugoslav Republic of Macedonia",
-                "Austria",
-                "Denmark",
-            )
-        ),
+        "region": REGIONS,
+        "country": COUNTRIES,
         "surveyId": pl.Int64,
     }
 )
 
 PA_TRAIN: Mapping[
-    _type_aliases.PAFeature | _type_aliases.TargetFeature,
+    type_aliases.PAFeature | type_aliases.TargetFeature,
     pl.PolarsDataType,
 ] = MappingProxyType(
     {
@@ -109,8 +111,8 @@ PA_TRAIN: Mapping[
         "year": pl.Int64,
         "geoUncertaintyInM": pl.Float64,
         "areaInM2": pl.Float64,
-        "region": pl.String,
-        "country": pl.String,
+        "region": REGIONS,
+        "country": COUNTRIES,
         "surveyId": pl.Int64,
         "speciesId": pl.Int64,
     }

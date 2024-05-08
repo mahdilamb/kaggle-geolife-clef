@@ -1,3 +1,4 @@
 polars
 pyarrow
 pandas
+jupyter-utils @ git+ssh://git@github.com/mahdilamb/jupyter-utils@v0.1.0

@@ -6,50 +6,72 @@
 #
 anyio==4.3.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   httpx
     #   jupyter-server
     #   jupyter-utils
 argon2-cffi==23.1.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-server
     #   jupyter-utils
 argon2-cffi-bindings==21.2.0
     # via
     #   argon2-cffi
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
 arrow==1.3.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   isoduration
     #   jupyter-utils
 asttokens==2.4.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   stack-data
 async-lru==2.0.4
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   jupyterlab
 attrs==23.2.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jsonschema
     #   jupyter-utils
     #   referencing
 babel==2.15.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   jupyterlab-server
 beautifulsoup4==4.12.3
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   nbconvert
 bleach==6.1.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   nbconvert
 build==1.2.1
     # via pip-tools
 certifi==2024.2.2
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   httpcore
     #   httpx
     #   jupyter-utils
@@ -57,60 +79,92 @@ certifi==2024.2.2
 cffi==1.16.0
     # via
     #   argon2-cffi-bindings
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
 charset-normalizer==3.3.2
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   requests
 click==8.1.7
     # via pip-tools
 comm==0.2.2
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipykernel
     #   jupyter-utils
+contourpy==1.2.1
+    # via matplotlib
 coverage[toml]==7.5.1
     # via pytest-cov
+cycler==0.12.1
+    # via matplotlib
 debugpy==1.8.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipykernel
     #   jupyter-utils
 decorator==5.1.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipython
     #   jupyter-utils
 defusedxml==0.7.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   nbconvert
 executing==2.0.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   stack-data
 fastjsonschema==2.19.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   nbformat
+fonttools==4.51.0
+    # via matplotlib
 fqdn==1.5.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jsonschema
     #   jupyter-utils
 geolife-clef-2024[dev,eda,test] @ file:///home/mahdi/kaggle-geolife-clef
     # via file:///home/mahdi/kaggle-geolife-clef
 h11==0.14.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   httpcore
     #   jupyter-utils
 httpcore==1.0.5
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   httpx
     #   jupyter-utils
 httpx==0.27.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   jupyterlab
 idna==3.7
     # via
     #   anyio
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   httpx
     #   jsonschema
     #   jupyter-utils
@@ -119,22 +173,32 @@ iniconfig==2.0.0
     # via pytest
 ipykernel==6.29.4
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   jupyterlab
 ipython==8.24.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipykernel
     #   jupyter-utils
 isoduration==20.11.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jsonschema
     #   jupyter-utils
 jedi==0.19.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipython
     #   jupyter-utils
 jinja2==3.1.4
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-server
     #   jupyter-utils
     #   jupyterlab
@@ -142,30 +206,42 @@ jinja2==3.1.4
     #   nbconvert
 json5==0.9.25
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   jupyterlab-server
 jsonpointer==2.4
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jsonschema
     #   jupyter-utils
 jsonschema[format-nongpl]==4.22.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-events
     #   jupyter-utils
     #   jupyterlab-server
     #   nbformat
 jsonschema-specifications==2023.12.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jsonschema
     #   jupyter-utils
 jupyter-client==8.6.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipykernel
     #   jupyter-server
     #   jupyter-utils
     #   nbclient
 jupyter-core==5.7.2
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipykernel
     #   jupyter-client
     #   jupyter-server
@@ -176,14 +252,20 @@ jupyter-core==5.7.2
     #   nbformat
 jupyter-events==0.10.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-server
     #   jupyter-utils
 jupyter-lsp==2.2.5
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   jupyterlab
 jupyter-server==2.14.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-lsp
     #   jupyter-utils
     #   jupyterlab
@@ -192,104 +274,161 @@ jupyter-server==2.14.0
     #   notebook-shim
 jupyter-server-terminals==0.5.3
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-server
     #   jupyter-utils
-jupyter-utils @ git+ssh://git@github.com/mahdilamb/jupyter-utils
-    # via geolife-clef-2024
+jupyter-utils @ git+ssh://git@github.com/mahdilamb/jupyter-utils@v0.1.0
+    # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
 jupyterlab==4.1.8
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   notebook
 jupyterlab-pygments==0.3.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   nbconvert
 jupyterlab-server==2.27.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   jupyterlab
     #   notebook
+kaleido==0.2.1
+    # via geolife-clef-2024
+kiwisolver==1.4.5
+    # via matplotlib
 markupsafe==2.1.5
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jinja2
     #   jupyter-utils
     #   nbconvert
+matplotlib==3.8.4
+    # via seaborn
 matplotlib-inline==0.1.7
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipykernel
     #   ipython
     #   jupyter-utils
 mistune==3.0.2
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   nbconvert
 nbclient==0.10.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   nbconvert
 nbconvert==7.16.4
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-server
     #   jupyter-utils
 nbformat==5.10.4
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-server
     #   jupyter-utils
     #   nbclient
     #   nbconvert
 nest-asyncio==1.6.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipykernel
     #   jupyter-utils
 notebook==7.1.3
-    # via jupyter-utils
+    # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
+    #   jupyter-utils
 notebook-shim==0.2.4
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   jupyterlab
     #   notebook
 numpy==1.26.4
     # via
+    #   contourpy
     #   geolife-clef-2024
     #   geolife-clef-2024 (pyproject.toml)
+    #   matplotlib
     #   pandas
     #   pyarrow
+    #   seaborn
 overrides==7.7.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-server
     #   jupyter-utils
 packaging==24.0
     # via
     #   build
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipykernel
     #   jupyter-server
     #   jupyter-utils
     #   jupyterlab
     #   jupyterlab-server
+    #   matplotlib
     #   nbconvert
+    #   plotly
     #   pytest
 pandas==2.2.2
     # via
     #   geolife-clef-2024
     #   geolife-clef-2024 (pyproject.toml)
+    #   seaborn
 pandocfilters==1.5.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   nbconvert
 parso==0.8.4
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jedi
     #   jupyter-utils
 pexpect==4.9.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipython
     #   jupyter-utils
+pillow==10.3.0
+    # via matplotlib
 pip-tools==7.4.1
     # via geolife-clef-2024
 platformdirs==4.2.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-core
     #   jupyter-utils
+plotly==5.22.0
+    # via geolife-clef-2024
 pluggy==1.5.0
     # via pytest
 polars==0.20.24
@@ -298,23 +437,33 @@ polars==0.20.24
     #   geolife-clef-2024 (pyproject.toml)
 prometheus-client==0.20.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-server
     #   jupyter-utils
 prompt-toolkit==3.0.43
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipython
     #   jupyter-utils
 psutil==5.9.8
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipykernel
     #   jupyter-utils
 ptyprocess==0.7.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   pexpect
     #   terminado
 pure-eval==0.2.2
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   stack-data
 pyarrow==16.0.0
@@ -324,12 +473,18 @@ pyarrow==16.0.0
 pycparser==2.22
     # via
     #   cffi
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
 pygments==2.18.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipython
     #   jupyter-utils
     #   nbconvert
+pyparsing==3.1.2
+    # via matplotlib
 pyproject-hooks==1.1.0
     # via
     #   build
@@ -347,9 +502,12 @@ python-dateutil==2.9.0.post0
     #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-client
     #   jupyter-utils
+    #   matplotlib
     #   pandas
 python-json-logger==2.0.7
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-events
     #   jupyter-utils
 pytz==2024.1
@@ -359,43 +517,61 @@ pytz==2024.1
     #   pandas
 pyyaml==6.0.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-events
     #   jupyter-utils
 pyzmq==26.0.3
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipykernel
     #   jupyter-client
     #   jupyter-server
     #   jupyter-utils
 referencing==0.35.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jsonschema
     #   jsonschema-specifications
     #   jupyter-events
     #   jupyter-utils
 requests==2.31.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   jupyterlab-server
 rfc3339-validator==0.1.4
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jsonschema
     #   jupyter-events
     #   jupyter-utils
 rfc3986-validator==0.1.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jsonschema
     #   jupyter-events
     #   jupyter-utils
 rpds-py==0.18.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jsonschema
     #   jupyter-utils
     #   referencing
 ruff==0.4.3
     # via geolife-clef-2024
+seaborn==0.13.2
+    # via geolife-clef-2024
 send2trash==1.8.3
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-server
     #   jupyter-utils
 six==1.16.0
@@ -410,27 +586,41 @@ six==1.16.0
 sniffio==1.3.1
     # via
     #   anyio
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   httpx
     #   jupyter-utils
 soupsieve==2.5
     # via
     #   beautifulsoup4
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
 stack-data==0.6.3
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipython
     #   jupyter-utils
+tenacity==8.3.0
+    # via plotly
 terminado==0.18.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-server
     #   jupyter-server-terminals
     #   jupyter-utils
 tinycss2==1.3.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   nbconvert
 tornado==6.4
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipykernel
     #   jupyter-client
     #   jupyter-server
@@ -441,6 +631,8 @@ tornado==6.4
 traitlets==5.14.3
     # via
     #   comm
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipykernel
     #   ipython
     #   jupyter-client
@@ -456,9 +648,13 @@ traitlets==5.14.3
 types-python-dateutil==2.9.0.20240316
     # via
     #   arrow
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
 typing-extensions==4.11.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   ipython
     #   jupyter-utils
 tzdata==2024.1
@@ -468,27 +664,39 @@ tzdata==2024.1
     #   pandas
 uri-template==1.3.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jsonschema
     #   jupyter-utils
 urllib3==2.2.1
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   requests
 wcwidth==0.2.13
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   prompt-toolkit
 webcolors==1.13
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jsonschema
     #   jupyter-utils
 webencodings==0.5.1
     # via
     #   bleach
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-utils
     #   tinycss2
 websocket-client==1.8.0
     # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
     #   jupyter-server
     #   jupyter-utils
 wheel==0.43.0

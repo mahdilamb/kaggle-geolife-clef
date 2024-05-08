@@ -4,21 +4,444 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
+anyio==4.3.0
+    # via
+    #   httpx
+    #   jupyter-server
+    #   jupyter-utils
+argon2-cffi==23.1.0
+    # via
+    #   jupyter-server
+    #   jupyter-utils
+argon2-cffi-bindings==21.2.0
+    # via
+    #   argon2-cffi
+    #   jupyter-utils
+arrow==1.3.0
+    # via
+    #   isoduration
+    #   jupyter-utils
+asttokens==2.4.1
+    # via
+    #   jupyter-utils
+    #   stack-data
+async-lru==2.0.4
+    # via
+    #   jupyter-utils
+    #   jupyterlab
+attrs==23.2.0
+    # via
+    #   jsonschema
+    #   jupyter-utils
+    #   referencing
+babel==2.15.0
+    # via
+    #   jupyter-utils
+    #   jupyterlab-server
+beautifulsoup4==4.12.3
+    # via
+    #   jupyter-utils
+    #   nbconvert
+bleach==6.1.0
+    # via
+    #   jupyter-utils
+    #   nbconvert
+certifi==2024.2.2
+    # via
+    #   httpcore
+    #   httpx
+    #   jupyter-utils
+    #   requests
+cffi==1.16.0
+    # via
+    #   argon2-cffi-bindings
+    #   jupyter-utils
+charset-normalizer==3.3.2
+    # via
+    #   jupyter-utils
+    #   requests
+comm==0.2.2
+    # via
+    #   ipykernel
+    #   jupyter-utils
+debugpy==1.8.1
+    # via
+    #   ipykernel
+    #   jupyter-utils
+decorator==5.1.1
+    # via
+    #   ipython
+    #   jupyter-utils
+defusedxml==0.7.1
+    # via
+    #   jupyter-utils
+    #   nbconvert
+executing==2.0.1
+    # via
+    #   jupyter-utils
+    #   stack-data
+fastjsonschema==2.19.1
+    # via
+    #   jupyter-utils
+    #   nbformat
+fqdn==1.5.1
+    # via
+    #   jsonschema
+    #   jupyter-utils
+h11==0.14.0
+    # via
+    #   httpcore
+    #   jupyter-utils
+httpcore==1.0.5
+    # via
+    #   httpx
+    #   jupyter-utils
+httpx==0.27.0
+    # via
+    #   jupyter-utils
+    #   jupyterlab
+idna==3.7
+    # via
+    #   anyio
+    #   httpx
+    #   jsonschema
+    #   jupyter-utils
+    #   requests
+ipykernel==6.29.4
+    # via
+    #   jupyter-utils
+    #   jupyterlab
+ipython==8.24.0
+    # via
+    #   ipykernel
+    #   jupyter-utils
+isoduration==20.11.0
+    # via
+    #   jsonschema
+    #   jupyter-utils
+jedi==0.19.1
+    # via
+    #   ipython
+    #   jupyter-utils
+jinja2==3.1.4
+    # via
+    #   jupyter-server
+    #   jupyter-utils
+    #   jupyterlab
+    #   jupyterlab-server
+    #   nbconvert
+json5==0.9.25
+    # via
+    #   jupyter-utils
+    #   jupyterlab-server
+jsonpointer==2.4
+    # via
+    #   jsonschema
+    #   jupyter-utils
+jsonschema[format-nongpl]==4.22.0
+    # via
+    #   jupyter-events
+    #   jupyter-utils
+    #   jupyterlab-server
+    #   nbformat
+jsonschema-specifications==2023.12.1
+    # via
+    #   jsonschema
+    #   jupyter-utils
+jupyter-client==8.6.1
+    # via
+    #   ipykernel
+    #   jupyter-server
+    #   jupyter-utils
+    #   nbclient
+jupyter-core==5.7.2
+    # via
+    #   ipykernel
+    #   jupyter-client
+    #   jupyter-server
+    #   jupyter-utils
+    #   jupyterlab
+    #   nbclient
+    #   nbconvert
+    #   nbformat
+jupyter-events==0.10.0
+    # via
+    #   jupyter-server
+    #   jupyter-utils
+jupyter-lsp==2.2.5
+    # via
+    #   jupyter-utils
+    #   jupyterlab
+jupyter-server==2.14.0
+    # via
+    #   jupyter-lsp
+    #   jupyter-utils
+    #   jupyterlab
+    #   jupyterlab-server
+    #   notebook
+    #   notebook-shim
+jupyter-server-terminals==0.5.3
+    # via
+    #   jupyter-server
+    #   jupyter-utils
+jupyter-utils @ git+ssh://git@github.com/mahdilamb/jupyter-utils@v0.1.0
+    # via -r requirements.in
+jupyterlab==4.1.8
+    # via
+    #   jupyter-utils
+    #   notebook
+jupyterlab-pygments==0.3.0
+    # via
+    #   jupyter-utils
+    #   nbconvert
+jupyterlab-server==2.27.1
+    # via
+    #   jupyter-utils
+    #   jupyterlab
+    #   notebook
+markupsafe==2.1.5
+    # via
+    #   jinja2
+    #   jupyter-utils
+    #   nbconvert
+matplotlib-inline==0.1.7
+    # via
+    #   ipykernel
+    #   ipython
+    #   jupyter-utils
+mistune==3.0.2
+    # via
+    #   jupyter-utils
+    #   nbconvert
+nbclient==0.10.0
+    # via
+    #   jupyter-utils
+    #   nbconvert
+nbconvert==7.16.4
+    # via
+    #   jupyter-server
+    #   jupyter-utils
+nbformat==5.10.4
+    # via
+    #   jupyter-server
+    #   jupyter-utils
+    #   nbclient
+    #   nbconvert
+nest-asyncio==1.6.0
+    # via
+    #   ipykernel
+    #   jupyter-utils
+notebook==7.1.3
+    # via jupyter-utils
+notebook-shim==0.2.4
+    # via
+    #   jupyter-utils
+    #   jupyterlab
+    #   notebook
 numpy==1.26.4
     # via
     #   pandas
     #   pyarrow
+overrides==7.7.0
+    # via
+    #   jupyter-server
+    #   jupyter-utils
+packaging==24.0
+    # via
+    #   ipykernel
+    #   jupyter-server
+    #   jupyter-utils
+    #   jupyterlab
+    #   jupyterlab-server
+    #   nbconvert
 pandas==2.2.2
     # via -r requirements.in
+pandocfilters==1.5.1
+    # via
+    #   jupyter-utils
+    #   nbconvert
+parso==0.8.4
+    # via
+    #   jedi
+    #   jupyter-utils
+pexpect==4.9.0
+    # via
+    #   ipython
+    #   jupyter-utils
+platformdirs==4.2.1
+    # via
+    #   jupyter-core
+    #   jupyter-utils
 polars==0.20.24
     # via -r requirements.in
+prometheus-client==0.20.0
+    # via
+    #   jupyter-server
+    #   jupyter-utils
+prompt-toolkit==3.0.43
+    # via
+    #   ipython
+    #   jupyter-utils
+psutil==5.9.8
+    # via
+    #   ipykernel
+    #   jupyter-utils
+ptyprocess==0.7.0
+    # via
+    #   jupyter-utils
+    #   pexpect
+    #   terminado
+pure-eval==0.2.2
+    # via
+    #   jupyter-utils
+    #   stack-data
 pyarrow==16.0.0
     # via -r requirements.in
+pycparser==2.22
+    # via
+    #   cffi
+    #   jupyter-utils
+pygments==2.18.0
+    # via
+    #   ipython
+    #   jupyter-utils
+    #   nbconvert
 python-dateutil==2.9.0.post0
-    # via pandas
+    # via
+    #   arrow
+    #   jupyter-client
+    #   jupyter-utils
+    #   pandas
+python-json-logger==2.0.7
+    # via
+    #   jupyter-events
+    #   jupyter-utils
 pytz==2024.1
     # via pandas
+pyyaml==6.0.1
+    # via
+    #   jupyter-events
+    #   jupyter-utils
+pyzmq==26.0.3
+    # via
+    #   ipykernel
+    #   jupyter-client
+    #   jupyter-server
+    #   jupyter-utils
+referencing==0.35.1
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
+    #   jupyter-events
+    #   jupyter-utils
+requests==2.31.0
+    # via
+    #   jupyter-utils
+    #   jupyterlab-server
+rfc3339-validator==0.1.4
+    # via
+    #   jsonschema
+    #   jupyter-events
+    #   jupyter-utils
+rfc3986-validator==0.1.1
+    # via
+    #   jsonschema
+    #   jupyter-events
+    #   jupyter-utils
+rpds-py==0.18.0
+    # via
+    #   jsonschema
+    #   jupyter-utils
+    #   referencing
+send2trash==1.8.3
+    # via
+    #   jupyter-server
+    #   jupyter-utils
 six==1.16.0
-    # via python-dateutil
+    # via
+    #   asttokens
+    #   bleach
+    #   jupyter-utils
+    #   python-dateutil
+    #   rfc3339-validator
+sniffio==1.3.1
+    # via
+    #   anyio
+    #   httpx
+    #   jupyter-utils
+soupsieve==2.5
+    # via
+    #   beautifulsoup4
+    #   jupyter-utils
+stack-data==0.6.3
+    # via
+    #   ipython
+    #   jupyter-utils
+terminado==0.18.1
+    # via
+    #   jupyter-server
+    #   jupyter-server-terminals
+    #   jupyter-utils
+tinycss2==1.3.0
+    # via
+    #   jupyter-utils
+    #   nbconvert
+tornado==6.4
+    # via
+    #   ipykernel
+    #   jupyter-client
+    #   jupyter-server
+    #   jupyter-utils
+    #   jupyterlab
+    #   notebook
+    #   terminado
+traitlets==5.14.3
+    # via
+    #   comm
+    #   ipykernel
+    #   ipython
+    #   jupyter-client
+    #   jupyter-core
+    #   jupyter-events
+    #   jupyter-server
+    #   jupyter-utils
+    #   jupyterlab
+    #   matplotlib-inline
+    #   nbclient
+    #   nbconvert
+    #   nbformat
+types-python-dateutil==2.9.0.20240316
+    # via
+    #   arrow
+    #   jupyter-utils
+typing-extensions==4.11.0
+    # via
+    #   ipython
+    #   jupyter-utils
 tzdata==2024.1
     # via pandas
+uri-template==1.3.0
+    # via
+    #   jsonschema
+    #   jupyter-utils
+urllib3==2.2.1
+    # via
+    #   jupyter-utils
+    #   requests
+wcwidth==0.2.13
+    # via
+    #   jupyter-utils
+    #   prompt-toolkit
+webcolors==1.13
+    # via
+    #   jsonschema
+    #   jupyter-utils
+webencodings==0.5.1
+    # via
+    #   bleach
+    #   jupyter-utils
+    #   tinycss2
+websocket-client==1.8.0
+    # via
+    #   jupyter-server
+    #   jupyter-utils
