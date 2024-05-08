@@ -1,0 +1,61 @@
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: "Create release"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Check version of ${{ github.ref }}
+        id: version
+        run: |
+          VERSION=$(python3 <<EOF
+          import importlib
+          import tomllib
+
+          with open("pyproject.toml", "rb") as fp:
+              data = tomllib.load(fp)
+              if version := data["project"].get("version"):
+                  print(version)
+              elif "version" in data["project"].get("dynamic", ()):
+                  how, where = next(
+                      iter(data["tool"]["setuptools"]["dynamic"]["version"].items())
+                  )
+                  if how == "attr":
+                      module_name, attr = where.rsplit(".", maxsplit=1)
+                      module = importlib.import_module(module_name)
+                      print(getattr(module, attr))
+          EOF
+          )
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "${VERSION}"
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            const description = (await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: process.env.GITHUB_SHA,
+            })).data[0].body;
+            const tagName = 'v${{steps.version.outputs.version}}'
+            github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tagName,
+              draft: false,
+              body: description,
+              make_latest: 'true',
+              name: tagName
+            })
