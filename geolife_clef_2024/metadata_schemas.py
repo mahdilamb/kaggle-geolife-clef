@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from types import MappingProxyType
 
 import polars as pl
-from polars import type_aliases as pl_types
+
 from geolife_clef_2024 import type_aliases
 
 COUNTRIES = pl.Enum(
