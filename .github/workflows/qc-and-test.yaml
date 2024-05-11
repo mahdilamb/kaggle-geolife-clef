@@ -16,6 +16,11 @@ jobs:
         run: |
           git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
           make install-all
+          
+          mkdir -p ~/.kaggle
+          echo '${{secrets.KAGGLE_JSON}}' >> ~/.kaggle/kaggle.json
+          chmod 600 /home/runner/.kaggle/kaggle.json
+
           make dataset
       - name: Cache dataset
         id: kaggle-dataset
