@@ -11,8 +11,8 @@ version = {attr = "geolife_clef_2024.__version__"}
 
 [project.optional-dependencies]
 all = ["geolife-clef-2024[dev,eda]"]
-dev = ["pip-tools", "ruff", "geolife-clef-2024[test]"]
-eda = ['plotly', 'kaleido', 'seaborn']
+dev = ["pip-tools", "ruff", "geolife-clef-2024[test]", 'mypy', 'pandas-stubs']
+eda = ['plotly', 'kaleido', 'seaborn', 'magicbox[notebook] @ git+ssh://git@github.com/mahdilamb/magicbox@v0.3.3']
 test = ["pytest", "pytest-cov"]
 [tool.setuptools.package-dir]
 "geolife_clef_2024" = "geolife_clef_2024"

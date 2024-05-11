@@ -1,4 +1,6 @@
 polars
 pyarrow
 pandas
-jupyter-utils @ git+ssh://git@github.com/mahdilamb/jupyter-utils@v0.3.2
+magicbox[polars] @ git+ssh://git@github.com/mahdilamb/magicbox@v0.3.3
+torch
+scikit-image

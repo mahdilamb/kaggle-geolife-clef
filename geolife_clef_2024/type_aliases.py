@@ -28,3 +28,8 @@ PAFeature: TypeAlias = Literal[
     "country",
     "speciesId",
 ]
+Raster: TypeAlias = Literal[
+    "climate", "elevation", "human_footprint", "land_cover", "soil_grids"
+]
+TimeGranularity: TypeAlias = Literal["monthly", "all"]
+SatelliteFormat: TypeAlias = Literal["pl", "pd", "pt"]
