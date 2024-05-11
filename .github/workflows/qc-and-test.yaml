@@ -16,7 +16,13 @@ jobs:
         run: |
           git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
           make install-all
-
+          make dataset
+      - name: Cache dataset
+        id: kaggle-dataset
+        uses: actions/cache@v4
+        with:
+          path: ./data
+          key: kaggle-dataset
       - name: Unit tests [pytest]
         run: |
           pytest --cov=geolife_clef_2024 --cov-report term-missing
