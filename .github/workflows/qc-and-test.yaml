@@ -15,7 +15,7 @@ jobs:
       - name: Install dependencies
         run: |
           git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
-          pip install -e .[all]
+          make install-all
 
       - name: Unit tests [pytest]
         run: |
