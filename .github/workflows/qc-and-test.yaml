@@ -21,6 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
+          rm requirements*.txt || echo "No stored requirements"
           make install-all
 
           mkdir -p ~/.kaggle
