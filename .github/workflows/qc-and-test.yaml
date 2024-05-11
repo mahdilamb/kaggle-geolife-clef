@@ -12,10 +12,22 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
+      - name: Cache dataset
+        id: kaggle-dataset
+        uses: actions/cache@v4
+        with:
+          path: ./data
+          key: kaggle-dataset
       - name: Install dependencies
         run: |
           git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
-          pip install -e .[all]
+          make install-all
+
+          mkdir -p ~/.kaggle
+          echo '${{secrets.KAGGLE_JSON}}' >> ~/.kaggle/kaggle.json
+          chmod 600 /home/runner/.kaggle/kaggle.json
+
+          make dataset
 
       - name: Unit tests [pytest]
         run: |
