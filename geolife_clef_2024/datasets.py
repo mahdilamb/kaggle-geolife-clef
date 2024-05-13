@@ -184,7 +184,7 @@ def load_observation_data(
         else (pl.Float64 if isinstance(v, pl.Int64) or v == pl.Int64 else v)
         for k, v in getattr(metadata_schemas, f"{group}_{split.upper()}").items()
     }
-    return pl.scan_csv(csv_file, schema=schema).cast(
+    return pl.scan_csv(csv_file, dtypes=schema, glob=False).cast(
         {
             k: v
             for k, v in getattr(metadata_schemas, f"{group}_{split.upper()}").items()

@@ -229,6 +229,7 @@ numpy==1.26.4
     #   pandas
     #   pandas-stubs
     #   pyarrow
+    #   reverse-geocoder
     #   scikit-image
     #   scipy
     #   seaborn
@@ -403,6 +404,10 @@ referencing==0.35.1
     #   jupyter-events
 requests==2.31.0
     # via jupyterlab-server
+reverse-geocoder==1.5.1
+    # via
+    #   geolife-clef-2024
+    #   geolife-clef-2024 (pyproject.toml)
 rfc3339-validator==0.1.4
     # via
     #   jsonschema
@@ -425,6 +430,7 @@ scipy==1.13.0
     # via
     #   geolife-clef-2024
     #   geolife-clef-2024 (pyproject.toml)
+    #   reverse-geocoder
     #   scikit-image
 seaborn==0.13.2
     # via geolife-clef-2024
