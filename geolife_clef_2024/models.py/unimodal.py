@@ -1,9 +1,12 @@
+"""Module containing unimodal models."""
+
 from collections.abc import Sequence
+from types import NoneType
 from typing import Literal, TypeAlias
 
 import polars as pl
 
-from geolife_clef_2024 import data
+from geolife_clef_2024 import data, datasets
 
 Column: TypeAlias = Literal["country", "district", "region"]
 
@@ -19,17 +22,26 @@ class NaiveTopForAll:
         top_by: Column | Sequence[Column] | None = None,
         top_k: int = 25,
     ) -> None:
+        """Create a Naive model that will return the same k top for each selection.
+
+        The selection is chosen by `top_by`.
+
+        Args:
+            top_by (Column | Sequence[Column] | None, optional): The columns to get the
+                top k for. Defaults to None.
+            top_k (int, optional): The number of top K elements to select. Defaults to
+                25.
+        """
         self._results: str | None | pl.LazyFrame = None
         self._top_k = top_k
-        self._top_for: Sequence[Column] | None = (
-            (top_by,)
-            if top_by is not None and not isinstance(top_by, Sequence)
-            else top_by
+        self._top_by: Sequence[Column] | None = (
+            top_by if isinstance(top_by, Sequence | NoneType) else (top_by,)
         )
 
-    def train(self):
-        train_df = data.add_location_data()
-        if self._top_for is None:
+    def fit(self):
+        """Find the top K elements."""
+        train_df = data.with_location_data(datasets.load_observation_data())
+        if self._top_by is None:
             self._results = (
                 train_df.group_by("speciesId")
                 .agg(pl.len())
@@ -42,10 +54,10 @@ class NaiveTopForAll:
             )
         else:
             self._results = (
-                train_df.group_by("speciesId", *self._top_for)
+                train_df.group_by("speciesId", *self._top_by)
                 .agg(pl.len())
                 .sort("len", descending=True)
-                .group_by(*self._top_for, maintain_order=True)
+                .group_by(*self._top_by, maintain_order=True)
                 .agg(pl.col("speciesId"))
                 .with_columns(
                     pl.col("speciesId")
@@ -55,16 +67,18 @@ class NaiveTopForAll:
                 )
             )
 
-    def test(self):
+    def transform(self):
+        """Append the top K predictions."""
         if self._results is None:
-            self.train()
-        if self._top_for is None:
-            return data.add_location_data("test").select(
+            self.fit()
+        test_df = datasets.load_observation_data(split="test")
+        if self._top_by is None:
+            return data.with_location_data(test_df).select(
                 "surveyId", predictions=pl.lit(self._results)
             )
         return (
-            data.add_location_data("test")
-            .select("surveyId", *self._top_for)
-            .join(self._results, on=self._top_for, how="left")
+            data.with_location_data(test_df)
+            .select("surveyId", *self._top_by)
+            .join(self._results, on=self._top_by, how="left")
             .select("surveyId", pl.col("speciesId").alias("predictions"))
         )

@@ -1,3 +1,5 @@
+"""Module containing utility functions relating to location."""
+
 import polars as pl
 import reverse_geocoder
 from magicbox import polars as pl_utils
@@ -6,6 +8,7 @@ from magicbox import polars as pl_utils
 def location_information(
     df: pl.LazyFrame | pl.DataFrame,
 ) -> pl.DataFrame:
+    """Reverse geocode location information."""
     df = df.lazy()
     coords = df.select(raw_lat=pl.col("lat"), raw_lon=pl.col("lon")).unique().collect()
 
