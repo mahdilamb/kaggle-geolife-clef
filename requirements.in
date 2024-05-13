@@ -4,3 +4,4 @@ pandas
 magicbox[polars] @ git+ssh://git@github.com/mahdilamb/magicbox@v0.3.3
 torch
 scikit-image
+reverse_geocoder
