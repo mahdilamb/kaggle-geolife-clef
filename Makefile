@@ -5,6 +5,8 @@ MAKEFLAGS += --no-print-directory
 PACKAGE_DIR=geolife_clef_2024
 SRC_FILES=${PACKAGE_DIR} tests
 
+DOCKERHUB_TAG=mahdilamb/geolife-clef-2024-cuda
+
 REQUIREMENTS_SUFFIX=$(shell [ -z ${extras} ] || echo '-${extras}')
 REQUIREMENTS_MD5_FILE=$(shell [ -z ${extras} ] && echo 'requirements.in.md5' || echo 'pyproject.toml.${extras}.md5')
 REQUIREMENTS_FILE=requirements${REQUIREMENTS_SUFFIX}.txt
@@ -47,6 +49,9 @@ prune-branches: except=main
 
 dataset: # Download the dataset
 	@[ -f "./data/GLC24_P0_metadata_train.csv" ] || ((python3 -c 'import kaggle' || python3 -m pip install kaggle) && kaggle competitions download -c geolifeclef-2024 && unzip -o geolifeclef-2024.zip -d ./data && rm -rf geolifeclef-2024.zip)
+
+docker-build:
+	DOCKER_BUILDKIT=1 docker build -t ${DOCKERHUB_TAG} .
 
 help: # Show help for each of the Makefile recipes.
 	@grep -E '^[a-zA-Z0-9 -]+:.*#'  Makefile | sort | while read -r l; do printf "\033[1;32m$$(echo $$l | cut -f 1 -d':')\033[00m\n\t$$(echo $$l | cut -f 2- -d'#')\n"; done

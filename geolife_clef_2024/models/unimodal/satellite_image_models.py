@@ -35,7 +35,7 @@ class Swinv2:
     num_epochs: int = 10
     positive_weight_factor: float = 1.0
     weights: Literal["IMAGENET1K_V1"] = "IMAGENET1K_V1"
-    run_id: str = os.getenv("GEOLIFE_CLEF_SWIN_V2_RUN_ID", "v1.1")
+    run_id: str = os.getenv("GEOLIFE_CLEF_SWIN_V1_RUN_ID", "v1.1")
     checkpoint_prefix = "resnet18-with-landsat-cubes"
     _model: nn.Module = dataclasses.field(init=False, repr=False, compare=False)
 
