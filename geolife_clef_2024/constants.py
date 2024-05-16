@@ -14,3 +14,4 @@ CHECKPOINT_DIR = os.getenv(
 WANDB_PROJECT = "geolife-clef-2024"
 
 SEED = 42
+os.makedirs(CHECKPOINT_DIR, exist_ok=True)
