@@ -5,7 +5,7 @@ MAKEFLAGS += --no-print-directory
 PACKAGE_DIR=geolife_clef_2024
 SRC_FILES=${PACKAGE_DIR} tests
 
-DOCKERHUB_TAG=mahdilamb/geolife-clef-2024-cuda
+DOCKERHUB_TAG=mahdilamb/geolife-clef-2024-cuda-12.4.1
 
 REQUIREMENTS_SUFFIX=$(shell [ -z ${extras} ] || echo '-${extras}')
 REQUIREMENTS_MD5_FILE=$(shell [ -z ${extras} ] && echo 'requirements.in.md5' || echo 'pyproject.toml.${extras}.md5')
