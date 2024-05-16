@@ -1,4 +1,4 @@
-.PHONY: help requirements install install-all qc test ruff mypy prune-branches dataset
+.PHONY: help requirements install install-all qc test ruff mypy prune-branches dataset docker-build docker-push
 default: help
 MAKEFLAGS += --no-print-directory
 
@@ -52,6 +52,9 @@ dataset: # Download the dataset
 
 docker-build:
 	DOCKER_BUILDKIT=1 docker build -t ${DOCKERHUB_TAG} .
+
+docker-push:
+	docker push ${DOCKERHUB_TAG}
 
 help: # Show help for each of the Makefile recipes.
 	@grep -E '^[a-zA-Z0-9 -]+:.*#'  Makefile | sort | while read -r l; do printf "\033[1;32m$$(echo $$l | cut -f 1 -d':')\033[00m\n\t$$(echo $$l | cut -f 2- -d'#')\n"; done

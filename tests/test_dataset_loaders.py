@@ -8,10 +8,10 @@ from typing import (
     TypeVar,
 )
 
-import numpy as np
 import pandas as pd
 import polars as pl
 import pytest
+import torch
 from torch.utils.data import Dataset
 
 from geolife_clef_2024 import datasets
@@ -64,10 +64,11 @@ class DatasetTest(NamedTuple, Generic[T]):
                     val, Dataset
                 ): "Expected the satellite patches to be a dataset.",
                 lambda val: isinstance(
-                    val[0][1], np.ndarray
+                    val[0][1], torch.Tensor
                 ): "Expected the image to be an ndarray.",
-                lambda val: val[0][1].shape[-1]
-                == 4: "Expected to get an RGB+NIR image.",
+                lambda val: val[0][1].shape[0]
+                == 4: lambda val: "Expected to get an RGB+NIR image. "
+                + f"Got tensor with shape {val[0][1].shape}",
             },
             errors=(),
         ),
@@ -75,7 +76,7 @@ class DatasetTest(NamedTuple, Generic[T]):
 )
 def test_load_dataset(
     fn: Callable[[], T],
-    tests: dict[Callable[[T], bool], str],
+    tests: dict[Callable[[T], bool], str | Callable[[T], str]],
     errors: tuple[type[Exception], ...],
 ):
     """Test the various dataset loaders."""
@@ -86,7 +87,7 @@ def test_load_dataset(
     else:
         actual = fn()
     for test_fn, message in tests.items():
-        assert test_fn(actual), message
+        assert test_fn(actual), message if not callable(message) else message(actual)
 
 
 if __name__ == "__main__":

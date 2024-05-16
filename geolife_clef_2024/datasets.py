@@ -26,6 +26,31 @@ from geolife_clef_2024 import (
 )
 
 
+def encoded_species_idxs():
+    """Get the mapping of species ids to survey ids.
+
+    Note: the species ids will be in OHE.
+    """
+    df = load_observation_data(split="train")
+    all_ids = df.select(pl.col("speciesId").unique().sort()).collect()
+    all_ids = all_ids.with_columns(
+        pl.int_range(0, (num_classes := all_ids.height), eager=True)
+    )
+    mapping = pl_utils.to_dict(
+        df.group_by("surveyId").agg(
+            speciesId=pl.col("speciesId").replace(pl_utils.to_dict(all_ids)).unique()
+        )
+    )
+
+    def encode(survey_id: str | int, dtype=torch.float32):
+        survey_id = int(survey_id)
+        label = torch.zeros(num_classes, dtype=dtype)
+        label[mapping[survey_id]] = 1
+        return label
+
+    return encode
+
+
 class SatellitePatchesDataset(Dataset[tuple[str, torch.Tensor, torch.Tensor]]):
     """Dataset containing the satellite patches."""
 
@@ -36,8 +61,6 @@ class SatellitePatchesDataset(Dataset[tuple[str, torch.Tensor, torch.Tensor]]):
         transforms: Sequence[albumentations.TransformType] = (),
     ) -> None:
         """Create a torch datset containing satellite patches."""
-        from geolife_clef_2024 import species_ids
-
         """Create a new dataset for a specific dataset split."""
         self._df = load_observation_data(split=split)
         self._survey_ids = (
@@ -56,6 +79,8 @@ class SatellitePatchesDataset(Dataset[tuple[str, torch.Tensor, torch.Tensor]]):
                     lambda survey_id: np.dstack(
                         [
                             composed_transforms(image=img)["image"]
+                            if transforms
+                            else img
                             for img in image_loader(survey_id=survey_id)
                         ]
                     )
@@ -65,7 +90,9 @@ class SatellitePatchesDataset(Dataset[tuple[str, torch.Tensor, torch.Tensor]]):
             )
         )
 
-        self._get_label = species_ids.encoded_species_idxs()
+        self._get_label = (
+            encoded_species_idxs() if split == "train" else lambda *_: None
+        )
 
     def _load_image(self, survey_id: int | str, /) -> torch.Tensor:
         """Load an image from a surveyId."""
@@ -77,7 +104,7 @@ class SatellitePatchesDataset(Dataset[tuple[str, torch.Tensor, torch.Tensor]]):
         """Get the number of patches."""
         return len(self._survey_ids)
 
-    def __getitem__(self, idx: int) -> tuple[str, torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx: int) -> tuple[str, torch.Tensor, torch.Tensor | None]:
         """Get a patch stack from a specific survey."""
         survey_id = self._survey_ids[idx]
         return (survey_id, self._load_image(survey_id), self._get_label(survey_id))
