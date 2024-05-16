@@ -162,3 +162,7 @@ cython_debug/
 /pyproject.toml.*.md5
 /data/
 /submissions/
+/.vscode/
+/wandb/
+/checkpoints/
+!/checkpoints/.gitkeep
