@@ -10,11 +10,11 @@ import albumentations
 import polars as pl
 import torch
 import torchvision.models as models
-import tqdm
 from magicbox import random as random_utils
 from torch import nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader
+from tqdm.autonotebook import tqdm
 
 import wandb
 from geolife_clef_2024 import constants, datasets
