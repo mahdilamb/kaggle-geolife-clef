@@ -168,7 +168,13 @@ class TimeSeriesDataset(
             "TimeSeries-Cubes",
             "TimeSeries-Cubes",
             f"GLC24-PA-{split}-{which}",
-            f"GLC24-PA-{split}-{which.replace('_','-') if  which == 'landsat_time_series' and split=='train' else which}_{{survey_id}}_cube.pt",
+            f"GLC24-PA-{split}-"
+            + (
+                which.replace("_", "-")
+                if which == "landsat_time_series" and split == "train"
+                else which
+            )
+            + "_{survey_id}_cube.pt",
         )
         self._transforms = (
             A.Compose(list(transforms)) if transforms else identity_transform

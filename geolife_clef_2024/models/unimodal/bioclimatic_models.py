@@ -16,7 +16,7 @@ from torch.utils.data import DataLoader
 from tqdm.autonotebook import tqdm
 
 import wandb
-from geolife_clef_2024 import constants, datasets, predictions
+from geolife_clef_2024 import constants, datasets, submissions
 from geolife_clef_2024.models import common as common_models
 
 
@@ -165,6 +165,7 @@ class BioClimaticModifiedResNet:
 
     @torch.inference_mode()
     def transform(self):
+        """Get the submission output."""
         device = torch.device(self.device)
         model = self._model.eval()
         decoder = datasets.create_species_decoder()
@@ -204,7 +205,7 @@ def main(args: Sequence[str] | None = None):
             parser._handle_conflict_resolve(None, [(option, action)])
     model, _ = parser.parse_known_args(args)
     model.fit()
-    predictions.save_predictions(
+    submissions.save_predictions(
         os.path.join(
             constants.ROOT_DIR,
             "submissions",

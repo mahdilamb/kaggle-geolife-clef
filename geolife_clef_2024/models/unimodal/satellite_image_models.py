@@ -18,7 +18,7 @@ from torch.utils.data import DataLoader
 from tqdm.autonotebook import tqdm
 
 import wandb
-from geolife_clef_2024 import constants, datasets, predictions
+from geolife_clef_2024 import constants, datasets, submissions
 
 
 @dataclasses.dataclass()
@@ -136,7 +136,7 @@ class Swinv2:
             )
             return
         wandb.login()
-        if self.run_id
+        if self.run_id:
             try:
                 api = wandb.Api()
                 last_run, *_ = api.runs(constants.WANDB_PROJECT)
@@ -173,6 +173,7 @@ class Swinv2:
 
     @torch.inference_mode()
     def transform(self):
+        """Get the submission output."""
         model = self._model.eval()
         decoder = datasets.create_species_decoder()
         test_loader = DataLoader(
@@ -209,7 +210,7 @@ def main(args: Sequence[str] | None = None):
             parser._handle_conflict_resolve(None, [(option, action)])
     model, _ = parser.parse_known_args(args)
     model.fit()
-    predictions.save_predictions(
+    submissions.save_predictions(
         os.path.join(constants.ROOT_DIR, "submissions", f"swinv2-{model.run_id}.csv"),
         model.transform(),
     )
