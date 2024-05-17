@@ -5,7 +5,7 @@ import glob
 import os
 import re
 from collections.abc import Sequence
-from typing import Literal, NoReturn, overload
+from typing import Literal, NoReturn, TypeVar, overload
 
 import albumentations
 import numpy as np
@@ -24,6 +24,12 @@ from geolife_clef_2024 import (
     satellite_patches,
     type_aliases,
 )
+
+T = TypeVar("T")
+
+
+def identity_transform(image: T) -> dict[Literal["image"], T]:
+    return {"image": image}
 
 
 def create_species_encoder():
@@ -93,13 +99,19 @@ class SatellitePatchesDataset(
         self._load_image = tv_transforms.Compose(
             (
                 tv_transforms.Lambda(
-                    lambda survey_id: np.dstack(
-                        [
-                            composed_transforms(image=img)["image"]
-                            if transforms
-                            else img
-                            for img in image_loader(survey_id=survey_id)
-                        ]
+                    (
+                        lambda survey_id: np.dstack(
+                            [
+                                composed_transforms(image=img)["image"]
+                                for img in image_loader(survey_id=survey_id)
+                            ]
+                        )
+                    )
+                    if transforms
+                    else (
+                        lambda survey_id: np.dstack(
+                            list(image_loader(survey_id=survey_id))
+                        )
                     )
                 ),
                 tv_transforms.ToImage(),
@@ -130,40 +142,59 @@ class SatellitePatchesDataset(
         return *output, self._get_label(survey_id)
 
 
-class TimeSeriesDataset(Dataset[tuple[str, torch.Tensor]]):
+class TimeSeriesDataset(
+    Dataset[tuple[str, torch.Tensor] | tuple[str, torch.Tensor, torch.Tensor]]
+):
     """Dataset for the satellite time series."""
 
     def __init__(
         self,
         split: type_aliases.Dataset,
         which: Literal["landsat_time_series", "bioclimatic_monthly"],
+        transforms: Sequence[albumentations.TransformType] = (),
         **torch_kwargs,
     ):
         """Create a time series dataset."""
+        self._df = load_observation_data(split=split)
+        self._survey_ids = (
+            self._df.select(pl.col("surveyId").unique()).collect().to_series()
+        )
         self._split = split
         self._load_kwargs = torch_kwargs
-        self._files = sorted(
-            glob.iglob(
-                os.path.join(
-                    constants.DATA_DIR,
-                    "TimeSeries-Cubes",
-                    "TimeSeries-Cubes",
-                    f"GLC24-PA-{split}-{which}",
-                    "*.pt",
-                )
-            )
+        self._file_format = os.path.join(
+            constants.DATA_DIR,
+            "TimeSeries-Cubes",
+            "TimeSeries-Cubes",
+            f"GLC24-PA-{split}-{which}",
+            f"GLC24-PA-{split}-{which.replace('_','-') if which == 'landsat_time_series' else which}_{{survey_id}}_cube.pt",
         )
+        self._transforms = (
+            albumentations.Compose(list(transforms))
+            if transforms
+            else identity_transform
+        )
+        self._get_label = create_species_encoder()
+
+    def _get_label(self, survey_id: int | str, /) -> torch.Tensor:
+        """Get the labels for a specific surveyId."""
 
     def __len__(self) -> int:
         """Get the number of elements in the time series dataset."""
-        return len(self._files)
+        return len(self._survey_ids)
 
-    def __getitem__(self, index) -> tuple[str, torch.Tensor]:
+    def __getitem__(
+        self, idx: int
+    ) -> tuple[str, torch.Tensor] | tuple[str, torch.Tensor, torch.Tensor]:
         """Get an item from the time series."""
-        file = self._files[index]
-        survey_id = next(re.finditer(r"(\d+)_cube", file)).group(1)
+        survey_id = self._survey_ids[idx]
+        file = self._file_format.format(survey_id=survey_id)
         arr = torch.load(file, **self._load_kwargs)
-        return survey_id, arr
+        # arr = arr.permute(1, 2, 0)
+        arr = self._transforms(image=arr)
+        output = survey_id, arr["image"]
+        if self._split == "test":
+            return output
+        return *output, self._get_label(survey_id)
 
 
 @overload
