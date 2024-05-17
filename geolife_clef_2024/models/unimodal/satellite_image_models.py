@@ -88,8 +88,8 @@ class Swinv2:
         optimizer = torch.optim.AdamW(model.parameters(), lr=self.learning_rate)
         scheduler = CosineAnnealingLR(optimizer, T_max=25)
 
-        for epoch in tqdm.tqdm(range(num_epochs)):
-            for _, data, targets in tqdm.tqdm(
+        for epoch in tqdm(range(num_epochs)):
+            for _, data, targets in tqdm(
                 train_loader,
                 leave=False,
                 position=1,
