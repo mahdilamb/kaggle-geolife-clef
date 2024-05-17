@@ -36,7 +36,7 @@ class Swinv2:
     num_epochs: int = 10
     positive_weight_factor: float = 1.0
     weights: Literal["IMAGENET1K_V1"] = "IMAGENET1K_V1"
-    run_id: str | None = None
+    run_id: str = ""
     checkpoint_prefix = "swinv2-satellite-patchess"
     _model: nn.Module = dataclasses.field(init=False, repr=False, compare=False)
 
@@ -71,7 +71,7 @@ class Swinv2:
                 for k, v in dataclasses.asdict(self).items()
                 if not k.startswith("_")
             },
-            id=self.run_id,
+            id=self.run_id or None,
         )
         model, num_epochs, positive_weight_factor, device = (
             self._model,
@@ -136,38 +136,39 @@ class Swinv2:
             )
             return
         wandb.login()
-        try:
-            api = wandb.Api()
-            last_run, *_ = api.runs(constants.WANDB_PROJECT)
-            if last_run.state == "finished":
-                epoch_pattern = re.compile(
-                    rf"run-{self.run_id}-{self.checkpoint_prefix}-.*?epoch_(\d+)"
-                )
-                collections_by_epoch = {
-                    int(epoch_pattern.findall(artifact.name)[0]): artifact
-                    for artifact in api.artifact_type(
-                        type_name="model", project=constants.WANDB_PROJECT
-                    ).collections()
-                    if artifact.name.startswith(
-                        f"run-{self.run_id}-{self.checkpoint_prefix}"
+        if self.run_id
+            try:
+                api = wandb.Api()
+                last_run, *_ = api.runs(constants.WANDB_PROJECT)
+                if last_run.state == "finished":
+                    epoch_pattern = re.compile(
+                        rf"run-{self.run_id}-{self.checkpoint_prefix}-.*?epoch_(\d+)"
                     )
-                }
-                if len(collections_by_epoch):
-                    last_epoch = max(collections_by_epoch.keys())
-                    checkpoint_path = self._checkpoint_path(last_epoch - 1)
+                    collections_by_epoch = {
+                        int(epoch_pattern.findall(artifact.name)[0]): artifact
+                        for artifact in api.artifact_type(
+                            type_name="model", project=constants.WANDB_PROJECT
+                        ).collections()
+                        if artifact.name.startswith(
+                            f"run-{self.run_id}-{self.checkpoint_prefix}"
+                        )
+                    }
+                    if len(collections_by_epoch):
+                        last_epoch = max(collections_by_epoch.keys())
+                        checkpoint_path = self._checkpoint_path(last_epoch - 1)
 
-                    collections_by_epoch[last_epoch].artifacts()[0].download(
-                        constants.CHECKPOINT_DIR
-                    )
-                    print(f"Loading checkpoint {checkpoint_path}")
-                    self._model.train().to(
-                        self.device, dtype=torch.float32
-                    ).load_state_dict(torch.load(checkpoint_path))
-                    return
+                        collections_by_epoch[last_epoch].artifacts()[0].download(
+                            constants.CHECKPOINT_DIR
+                        )
+                        print(f"Loading checkpoint {checkpoint_path}")
+                        self._model.train().to(
+                            self.device, dtype=torch.float32
+                        ).load_state_dict(torch.load(checkpoint_path))
+                        return
 
-        except Exception as e:
-            print("Tried loading an old run. Failed!")
-            print(e)
+            except Exception as e:
+                print("Tried loading an old run. Failed!")
+                print(e)
         return self._train()
 
     @torch.inference_mode()
@@ -180,8 +181,8 @@ class Swinv2:
             shuffle=False,
             num_workers=4,
         )
-        all_survey_ids = pl.Series("surveyId", dtype_if_empty=pl.Int64)
-        all_predictions = pl.Series("predictions", dtype_if_empty=pl.List(pl.Int64))
+        all_survey_ids = pl.Series("surveyId", dtype=pl.Int64)
+        all_predictions = pl.Series("predictions", dtype=pl.List(pl.Int64))
 
         for survey_id, data in tqdm(
             test_loader,
