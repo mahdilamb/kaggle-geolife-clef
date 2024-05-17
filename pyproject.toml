@@ -10,10 +10,18 @@ readme = {file = "README.md"}
 version = {attr = "geolife_clef_2024.__version__"}
 
 [project.optional-dependencies]
-all = ["geolife-clef-2024[dev,eda]"]
+all = ["geolife-clef-2024[dev,eda,training]"]
 dev = ["pip-tools", "ruff", "geolife-clef-2024[test]", 'mypy', 'pandas-stubs']
-eda = ['plotly', 'kaleido', 'seaborn', 'magicbox[notebook] @ git+ssh://git@github.com/mahdilamb/magicbox@v0.3.3']
+eda = ['plotly', 'kaleido', 'seaborn', 'magicbox[notebook] @ git+ssh://git@github.com/mahdilamb/magicbox@v0.4.0']
 test = ["pytest", "pytest-cov"]
+training = [
+  'scikit-learn',
+  'torchvision',
+  'albumentations',
+  'reverse_geocoder',
+  'tqdm',
+  'argparse-dataclass',
+]
 [tool.setuptools.package-dir]
 "geolife_clef_2024" = "geolife_clef_2024"
 

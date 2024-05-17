@@ -7,12 +7,14 @@ import re
 from collections.abc import Sequence
 from typing import Literal, NoReturn, overload
 
+import albumentations
 import numpy as np
 import pandas as pd
 import polars as pl
 import torch
 import torch.utils
 import torch.utils.data
+import torchvision.transforms.v2 as tv_transforms
 from magicbox import polars as pl_utils
 from torch.utils.data import Dataset
 
@@ -24,63 +26,108 @@ from geolife_clef_2024 import (
 )
 
 
-@functools.cache
-def all_satellite_patch_survey_ids(
-    split: type_aliases.Dataset,
-) -> Sequence[str]:
-    """Get the survey_ids of all the satellite patches."""
-    return pl.Series(
-        values=glob.iglob(
-            os.path.join(
-                constants.DATA_DIR,
-                f"PA_{split.title()}_SatellitePatches_RGB",
-                f"pa_{split}_patches_rgb",
-                "**",
-                "**",
-                "**.jpeg",
-            )
+def create_species_encoder():
+    """Get the mapping of species ids to survey ids.
+
+    Note: the species ids will be in OHE.
+    """
+    df = load_observation_data(split="train")
+    all_ids = df.select(pl.col("speciesId").unique().sort()).collect()
+    all_ids = all_ids.with_columns(
+        pl.int_range(0, (num_classes := all_ids.height), eager=True)
+    )
+    mapping = pl_utils.to_dict(
+        df.group_by("surveyId").agg(
+            speciesId=pl.col("speciesId").replace(pl_utils.to_dict(all_ids)).unique()
         )
-    ).str.extract(r"([^\/]*?)\.")  # type: ignore
+    )
+
+    def encode(survey_id: str | int, dtype=torch.float32):
+        survey_id = int(survey_id)
+        label = torch.zeros(num_classes, dtype=dtype)
+        label[mapping[survey_id]] = 1
+        return label
+
+    return encode
 
 
-@functools.cache
-def survey_ids_with_satellite_patches(
-    split: type_aliases.Dataset,
-) -> Sequence[str]:
-    """Get a sequence of survey ids that have an associated patch."""
-    return (
-        load_observation_data(split=split)
-        .select(pl.col("surveyId").cast(pl.String))
-        .filter(pl.col("surveyId").is_in(all_satellite_patch_survey_ids(split=split)))
-        .sort("surveyId")
-        .collect()
-        .to_series()
-    )  # type: ignore
+def create_species_decoder():
+    df = load_observation_data(split="train")
+    all_ids = df.select(pl.col("speciesId").unique().sort()).collect().to_series()
+
+    def decode(idxs: Sequence[int]):
+        arr = np.asarray(idxs)
+        return pl.Series(
+            "predictions",
+            values=[np.take(all_ids, arr[i, :]) for i in range(arr.shape[0])],
+        )
+
+    return decode
 
 
-class SatellitePatchesDataset(Dataset[tuple[str, np.ndarray]]):
+class SatellitePatchesDataset(
+    Dataset[tuple[str, torch.Tensor, torch.Tensor] | tuple[str, torch.Tensor]]
+):
     """Dataset containing the satellite patches."""
 
     def __init__(
         self,
         split: type_aliases.Dataset,
         include_nir: bool = True,
+        transforms: Sequence[albumentations.TransformType] = (),
     ) -> None:
+        """Create a torch datset containing satellite patches."""
         """Create a new dataset for a specific dataset split."""
-        self._include_nir = include_nir
+        self._df = load_observation_data(split=split)
+        self._survey_ids = (
+            self._df.select(pl.col("surveyId").unique()).collect().to_series()
+        )
         self._split = split
-        self._survey_ids = survey_ids_with_satellite_patches(split=split)
+        image_loader = functools.partial(
+            satellite_patches.load_patch
+            if include_nir
+            else satellite_patches.load_rgb_patch,
+            split=split,
+        )
+        composed_transforms = albumentations.Compose(list(transforms))
+        self._load_image = tv_transforms.Compose(
+            (
+                tv_transforms.Lambda(
+                    lambda survey_id: np.dstack(
+                        [
+                            composed_transforms(image=img)["image"]
+                            if transforms
+                            else img
+                            for img in image_loader(survey_id=survey_id)
+                        ]
+                    )
+                ),
+                tv_transforms.ToImage(),
+                tv_transforms.ToDtype(torch.float32, scale=True),
+            )
+        )
+
+        self._get_label = create_species_encoder()
+
+    def _load_image(self, survey_id: int | str, /) -> torch.Tensor:
+        """Load an image from a surveyId."""
+
+    def _get_label(self, survey_id: int | str, /) -> torch.Tensor:
+        """Get the labels for a specific surveyId."""
 
     def __len__(self) -> int:
         """Get the number of patches."""
         return len(self._survey_ids)
 
-    def __getitem__(self, idx: int) -> tuple[str, np.ndarray]:
+    def __getitem__(
+        self, idx: int
+    ) -> tuple[str, torch.Tensor, torch.Tensor] | tuple[str, torch.Tensor]:
         """Get a patch stack from a specific survey."""
         survey_id = self._survey_ids[idx]
-        return survey_id, satellite_patches.load_patch(
-            survey_id=survey_id, split=self._split, include_nir=self._include_nir
-        )
+        output = survey_id, self._load_image(survey_id)
+        if self._split == "test":
+            return output
+        return *output, self._get_label(survey_id)
 
 
 class TimeSeriesDataset(Dataset[tuple[str, torch.Tensor]]):
