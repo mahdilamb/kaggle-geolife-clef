@@ -26,7 +26,7 @@ from geolife_clef_2024 import (
 )
 
 
-def encoded_species_idxs():
+def create_species_encoder():
     """Get the mapping of species ids to survey ids.
 
     Note: the species ids will be in OHE.
@@ -51,7 +51,23 @@ def encoded_species_idxs():
     return encode
 
 
-class SatellitePatchesDataset(Dataset[tuple[str, torch.Tensor, torch.Tensor]]):
+def create_species_decoder():
+    df = load_observation_data(split="train")
+    all_ids = df.select(pl.col("speciesId").unique().sort()).collect().to_series()
+
+    def decode(idxs: Sequence[int]):
+        arr = np.asarray(idxs)
+        return pl.Series(
+            "predictions",
+            values=[np.take(all_ids, arr[i, :]) for i in range(arr.shape[0])],
+        )
+
+    return decode
+
+
+class SatellitePatchesDataset(
+    Dataset[tuple[str, torch.Tensor, torch.Tensor] | tuple[str, torch.Tensor]]
+):
     """Dataset containing the satellite patches."""
 
     def __init__(
@@ -66,6 +82,7 @@ class SatellitePatchesDataset(Dataset[tuple[str, torch.Tensor, torch.Tensor]]):
         self._survey_ids = (
             self._df.select(pl.col("surveyId").unique()).collect().to_series()
         )
+        self._split = split
         image_loader = functools.partial(
             satellite_patches.load_patch
             if include_nir
@@ -90,9 +107,7 @@ class SatellitePatchesDataset(Dataset[tuple[str, torch.Tensor, torch.Tensor]]):
             )
         )
 
-        self._get_label = (
-            encoded_species_idxs() if split == "train" else lambda *_: None
-        )
+        self._get_label = create_species_encoder()
 
     def _load_image(self, survey_id: int | str, /) -> torch.Tensor:
         """Load an image from a surveyId."""
@@ -104,10 +119,15 @@ class SatellitePatchesDataset(Dataset[tuple[str, torch.Tensor, torch.Tensor]]):
         """Get the number of patches."""
         return len(self._survey_ids)
 
-    def __getitem__(self, idx: int) -> tuple[str, torch.Tensor, torch.Tensor | None]:
+    def __getitem__(
+        self, idx: int
+    ) -> tuple[str, torch.Tensor, torch.Tensor] | tuple[str, torch.Tensor]:
         """Get a patch stack from a specific survey."""
         survey_id = self._survey_ids[idx]
-        return (survey_id, self._load_image(survey_id), self._get_label(survey_id))
+        output = survey_id, self._load_image(survey_id)
+        if self._split == "test":
+            return output
+        return *output, self._get_label(survey_id)
 
 
 class TimeSeriesDataset(Dataset[tuple[str, torch.Tensor]]):

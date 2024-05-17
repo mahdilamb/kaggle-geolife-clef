@@ -19,7 +19,8 @@ training = [
   'torchvision',
   'albumentations',
   'reverse_geocoder',
-  'tqdm'
+  'tqdm',
+  'argparse-dataclass',
 ]
 [tool.setuptools.package-dir]
 "geolife_clef_2024" = "geolife_clef_2024"

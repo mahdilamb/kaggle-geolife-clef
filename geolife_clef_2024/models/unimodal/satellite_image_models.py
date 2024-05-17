@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from typing import Literal
 
 import albumentations
+import numpy as np
 import polars as pl
 import torch
 import torchvision.models as models
@@ -17,7 +18,7 @@ from torch.utils.data import DataLoader
 from tqdm.autonotebook import tqdm
 
 import wandb
-from geolife_clef_2024 import constants, datasets
+from geolife_clef_2024 import constants, datasets, predictions
 
 
 @dataclasses.dataclass()
@@ -127,6 +128,14 @@ class Swinv2:
     def fit(self):
         """Fit the training data/or load a checkpoint."""
         random_utils.set_seed(constants.SEED)
+        if os.path.exists(
+            checkpoint_path := self._checkpoint_path(self.num_epochs - 1)
+        ):
+            print(f"Loading checkpoint {checkpoint_path}")
+            self._model.train().to(self.device, dtype=torch.float32).load_state_dict(
+                torch.load(checkpoint_path)
+            )
+            return
         wandb.login()
         try:
             api = wandb.Api()
@@ -162,6 +171,51 @@ class Swinv2:
             print(e)
         return self._train()
 
+    @torch.inference_mode()
+    def transform(self):
+        model = self._model.eval()
+        decoder = datasets.create_species_decoder()
+        test_loader = DataLoader(
+            dataset := datasets.SatellitePatchesDataset(
+                split="test", transforms=self.transforms
+            ),
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=4,
+        )
+        all_survey_ids = pl.Series("surveyId", dtype_if_empty=pl.Int64)
+        all_predictions = pl.Series("predictions", dtype_if_empty=pl.List(pl.Int64))
+
+        for survey_id, data in tqdm(
+            test_loader,
+            leave=False,
+            position=1,
+        ):
+            data = data.to(self.device, dtype=torch.float32)
+            outputs = torch.sigmoid(model(data))
+            all_survey_ids.extend(pl.Series(values=np.asarray(survey_id).flatten()))
+            all_predictions.extend(
+                decoder(np.argsort(-outputs.cpu().numpy(), axis=1)[:, :25])
+            )
+
+        return pl.DataFrame((all_survey_ids, all_predictions))
+
+
+def main(args: Sequence[str] | None = None):
+    """Allow running from the terminal."""
+    import argparse_dataclass
+
+    parser = argparse_dataclass.ArgumentParser(Swinv2)
+    for action in parser._actions:
+        if (option := action.option_strings[0]).startswith("---"):
+            parser._handle_conflict_resolve(None, [(option, action)])
+    model, _ = parser.parse_known_args(args)
+    model.fit()
+    predictions.save_predictions(
+        os.path.join(constants.ROOT_DIR, "submissions", f"swinv2-{model.run_id}.csv"),
+        model.transform(),
+    )
+
 
 if __name__ == "__main__":
-    Swinv2().fit()
+    main()
