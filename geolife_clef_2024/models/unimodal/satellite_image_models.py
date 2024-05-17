@@ -6,7 +6,7 @@ import re
 from collections.abc import Sequence
 from typing import Literal
 
-import albumentations
+import albumentations as A
 import numpy as np
 import polars as pl
 import torch
@@ -26,17 +26,17 @@ class Swinv2:
     """Model using Swinv2."""
 
     batch_size: int = 64
-    transforms: Sequence[albumentations.TransformType] = (
-        albumentations.RandomBrightnessContrast(p=0.2),
-        albumentations.ColorJitter(p=0.2),
-        albumentations.OpticalDistortion(p=0.2),
+    transforms: Sequence[A.TransformType] = (
+        A.RandomBrightnessContrast(p=0.2),
+        A.ColorJitter(p=0.2),
+        A.OpticalDistortion(p=0.2),
     )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     learning_rate: float = 0.0002
     num_epochs: int = 10
     positive_weight_factor: float = 1.0
     weights: Literal["IMAGENET1K_V1"] = "IMAGENET1K_V1"
-    run_id: str = "v1"
+    run_id: str | None = None
     checkpoint_prefix = "swinv2-satellite-patchess"
     _model: nn.Module = dataclasses.field(init=False, repr=False, compare=False)
 

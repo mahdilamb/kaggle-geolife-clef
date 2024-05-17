@@ -4,9 +4,8 @@ import dataclasses
 import os
 import re
 from collections.abc import Sequence
-from typing import Literal
 
-import albumentations
+import albumentations as A
 import numpy as np
 import polars as pl
 import torch
@@ -26,12 +25,12 @@ class BioClimaticModifiedResNet:
     """Model using ModifiedResNet18."""
 
     batch_size: int = 64
-    transforms: Sequence[albumentations.TransformType] = ()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    transforms: Sequence[A.TransformType] = ()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     learning_rate: float = 0.0002
     num_epochs: int = 20
     positive_weight_factor: float = 1.0
-    run_id: str = "v1"
+    run_id: str = ""
     checkpoint_prefix = "resnet18-with-bioclimatic-cubes"
     _model: nn.Module = dataclasses.field(init=False, repr=False, compare=False)
 
@@ -40,10 +39,11 @@ class BioClimaticModifiedResNet:
     ):
         """Initialize the model."""
         self._model = common_models.ModifiedResNet18(
-            datasets.load_observation_data(split="train")
+            [4, 19, 12],
+            num_classes=datasets.load_observation_data(split="train")
             .select(pl.col("speciesId").unique().count())
             .collect()
-            .item()
+            .item(),
         )
 
     def _checkpoint_path(self, epoch: int):
@@ -61,13 +61,13 @@ class BioClimaticModifiedResNet:
                 for k, v in dataclasses.asdict(self).items()
                 if not k.startswith("_")
             },
-            id=self.run_id,
+            id=self.run_id or None,
         )
         model, num_epochs, positive_weight_factor, device = (
             self._model,
             self.num_epochs,
             self.positive_weight_factor,
-            self.device,
+            torch.device(self.device),
         )
         model = model.train().to(device, dtype=torch.float32)
         train_loader = DataLoader(
@@ -123,9 +123,9 @@ class BioClimaticModifiedResNet:
             checkpoint_path := self._checkpoint_path(self.num_epochs - 1)
         ):
             print(f"Loading checkpoint {checkpoint_path}")
-            self._model.train().to(self.device, dtype=torch.float32).load_state_dict(
-                torch.load(checkpoint_path)
-            )
+            self._model.train().to(
+                torch.device(self.device), dtype=torch.float32
+            ).load_state_dict(torch.load(checkpoint_path))
             return
         wandb.login()
         try:
@@ -153,7 +153,7 @@ class BioClimaticModifiedResNet:
                     )
                     print(f"Loading checkpoint {checkpoint_path}")
                     self._model.train().to(
-                        self.device, dtype=torch.float32
+                        torch.device(self.device), dtype=torch.float32
                     ).load_state_dict(torch.load(checkpoint_path))
                     return
 
@@ -164,6 +164,7 @@ class BioClimaticModifiedResNet:
 
     @torch.inference_mode()
     def transform(self):
+        device = torch.device(self.device)
         model = self._model.eval()
         decoder = datasets.create_species_decoder()
         test_loader = DataLoader(
@@ -182,7 +183,7 @@ class BioClimaticModifiedResNet:
             leave=False,
             position=1,
         ):
-            data = data.to(self.device, dtype=torch.float32)
+            data = data.to(device, dtype=torch.float32)
             outputs = torch.sigmoid(model(data))
             all_survey_ids.extend(pl.Series(values=np.asarray(survey_id).flatten()))
             all_predictions.extend(

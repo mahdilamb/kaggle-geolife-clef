@@ -4,9 +4,8 @@ import dataclasses
 import os
 import re
 from collections.abc import Sequence
-from typing import Literal
 
-import albumentations
+import albumentations as A
 import numpy as np
 import polars as pl
 import torch
@@ -26,12 +25,12 @@ class LandsatModifiedResNet:
     """Model using ModifiedResNet18."""
 
     batch_size: int = 64
-    transforms: Sequence[albumentations.TransformType] = ()
+    transforms: Sequence[A.TransformType] = ()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     learning_rate: float = 0.0002
     num_epochs: int = 20
     positive_weight_factor: float = 1.0
-    run_id: str = "v1"
+    run_id: str = ""
     checkpoint_prefix = "resnet18-with-landsat-cubes"
     _model: nn.Module = dataclasses.field(init=False, repr=False, compare=False)
 
@@ -40,10 +39,11 @@ class LandsatModifiedResNet:
     ):
         """Initialize the model."""
         self._model = common_models.ModifiedResNet18(
-            datasets.load_observation_data(split="train")
+            [6, 4, 21],
+            num_classes=datasets.load_observation_data(split="train")
             .select(pl.col("speciesId").unique().count())
             .collect()
-            .item()
+            .item(),
         )
 
     def _checkpoint_path(self, epoch: int):
@@ -61,7 +61,7 @@ class LandsatModifiedResNet:
                 for k, v in dataclasses.asdict(self).items()
                 if not k.startswith("_")
             },
-            id=self.run_id,
+            id=self.run_id or None,
         )
         model, num_epochs, positive_weight_factor, device = (
             self._model,
