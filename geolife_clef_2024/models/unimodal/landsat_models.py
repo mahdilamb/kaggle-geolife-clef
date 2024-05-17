@@ -4,13 +4,11 @@ import dataclasses
 import os
 import re
 from collections.abc import Sequence
-from typing import Literal
 
 import albumentations as A
 import numpy as np
 import polars as pl
 import torch
-import torchvision.models as models
 from magicbox import random as random_utils
 from torch import nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -19,42 +17,34 @@ from tqdm.autonotebook import tqdm
 
 import wandb
 from geolife_clef_2024 import constants, datasets, predictions
+from geolife_clef_2024.models import common as common_models
 
 
 @dataclasses.dataclass()
-class Swinv2:
-    """Model using Swinv2."""
+class LandsatModifiedResNet:
+    """Model using ModifiedResNet18."""
 
     batch_size: int = 64
-    transforms: Sequence[A.TransformType] = (
-        A.RandomBrightnessContrast(p=0.2),
-        A.ColorJitter(p=0.2),
-        A.OpticalDistortion(p=0.2),
-    )
+    transforms: Sequence[A.TransformType] = ()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     learning_rate: float = 0.0002
-    num_epochs: int = 10
+    num_epochs: int = 20
     positive_weight_factor: float = 1.0
-    weights: Literal["IMAGENET1K_V1"] = "IMAGENET1K_V1"
     run_id: str = ""
-    checkpoint_prefix = "swinv2-satellite-patchess"
+    checkpoint_prefix = "resnet18-with-landsat-cubes"
     _model: nn.Module = dataclasses.field(init=False, repr=False, compare=False)
 
     def __post_init__(
         self,
     ):
         """Initialize the model."""
-        model = models.swin_v2_s(weights=self.weights)
-        model.features[0][0] = nn.Conv2d(4, 96, kernel_size=(4, 4), stride=(4, 4))
-        model.head = nn.Linear(
-            in_features=768,
-            out_features=datasets.load_observation_data(split="train")
+        self._model = common_models.ModifiedResNet18(
+            [6, 4, 21],
+            num_classes=datasets.load_observation_data(split="train")
             .select(pl.col("speciesId").unique().count())
             .collect()
             .item(),
-            bias=True,
         )
-        self._model = model
 
     def _checkpoint_path(self, epoch: int):
         return os.path.join(
@@ -65,7 +55,7 @@ class Swinv2:
     def _train(self):
         run = wandb.init(
             project=constants.WANDB_PROJECT,
-            tags=["Swinv2", "satellite-image", "unimodal"],
+            tags=["ModifiedResNet18", "landsat", "unimodal"],
             config={
                 k: v
                 for k, v in dataclasses.asdict(self).items()
@@ -81,7 +71,9 @@ class Swinv2:
         )
         model = model.train().to(device, dtype=torch.float32)
         train_loader = DataLoader(
-            datasets.SatellitePatchesDataset(split="train", transforms=self.transforms),
+            datasets.TimeSeriesDataset(
+                split="train", transforms=self.transforms, which="landsat_time_series"
+            ),
             batch_size=self.batch_size,
             shuffle=True,
             num_workers=4,
@@ -136,7 +128,7 @@ class Swinv2:
             )
             return
         wandb.login()
-        if self.run_id
+        if self.run_id:
             try:
                 api = wandb.Api()
                 last_run, *_ = api.runs(constants.WANDB_PROJECT)
@@ -176,7 +168,9 @@ class Swinv2:
         model = self._model.eval()
         decoder = datasets.create_species_decoder()
         test_loader = DataLoader(
-            datasets.SatellitePatchesDataset(split="test", transforms=self.transforms),
+            datasets.TimeSeriesDataset(
+                split="test", transforms=self.transforms, which="landsat_time_series"
+            ),
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=4,
@@ -203,14 +197,18 @@ def main(args: Sequence[str] | None = None):
     """Allow running from the terminal."""
     import argparse_dataclass
 
-    parser = argparse_dataclass.ArgumentParser(Swinv2)
+    parser = argparse_dataclass.ArgumentParser(LandsatModifiedResNet)
     for action in parser._actions:
         if (option := action.option_strings[0]).startswith("---"):
             parser._handle_conflict_resolve(None, [(option, action)])
     model, _ = parser.parse_known_args(args)
     model.fit()
     predictions.save_predictions(
-        os.path.join(constants.ROOT_DIR, "submissions", f"swinv2-{model.run_id}.csv"),
+        os.path.join(
+            constants.ROOT_DIR,
+            "submissions",
+            f"resnet18-landsat-{model.run_id}.csv",
+        ),
         model.transform(),
     )
 
