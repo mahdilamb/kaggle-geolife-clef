@@ -14,6 +14,7 @@ from torchvision.transforms import v2
 from torchvision.transforms.v2._utils import (
     has_any,
 )
+from torch import nn
 
 
 class DatasetSlicerMetaClass(type):
@@ -124,10 +125,15 @@ def _modified_base_mixup_cutmix_forward(self, *inputs):
     return tree_unflatten(flat_outputs, spec)
 
 
-def create_cutmix_or_mixup_collate_function(num_classes: int):
+def create_cutmix_or_mixup_collate_function(
+    num_classes: int, cutmix_alpha: float | None = 1.0, mixup_alpha: float | None = 1.0
+):
     """Create a CutMix/Mixup collate function."""
-    cutmix = v2.CutMix(num_classes=num_classes)
-    mixup = v2.MixUp(num_classes=num_classes)
+    mixup = cutmix = nn.Identity()
+    if cutmix_alpha is not None:
+        cutmix = v2.CutMix(num_classes=num_classes, alpha=cutmix_alpha)
+    if mixup_alpha is not None:
+        mixup = v2.MixUp(num_classes=num_classes, alpha=mixup_alpha)
     cutmix_or_mixup = v2.RandomChoice((cutmix, mixup))
 
     def collate_fn(batch):

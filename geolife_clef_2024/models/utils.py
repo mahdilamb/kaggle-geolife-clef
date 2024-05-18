@@ -88,6 +88,7 @@ class WandbTrackedModel(Generic[T]):
         return self.config
 
     def _train(self, run):
+        random_utils.set_seed(constants.SEED)
         config = self.__safe_config
         model, num_epochs, positive_weight_factor, device = (
             self.__model,
@@ -146,7 +147,6 @@ class WandbTrackedModel(Generic[T]):
 
     def fit(self):
         """Fit the training data/or load a checkpoint."""
-        random_utils.set_seed(constants.SEED)
         config = self.__safe_config
         device = torch.device(config.device)
         full_config = dataclasses.asdict(config) | {"seed": constants.SEED}
