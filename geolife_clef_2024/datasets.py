@@ -106,6 +106,8 @@ class SatellitePatchesDataset(
                 composed_transforms = A.Compose(list(transforms))
         self._load_image = tv_transforms.Compose(
             (
+                tv_transforms.ToImage(),
+                tv_transforms.ToDtype(torch.float32, scale=True),
                 tv_transforms.Lambda(
                     (
                         (
@@ -133,8 +135,6 @@ class SatellitePatchesDataset(
                         )
                     )
                 ),
-                tv_transforms.ToImage(),
-                tv_transforms.ToDtype(torch.float32, scale=True),
             )
         )
 
