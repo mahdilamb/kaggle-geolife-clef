@@ -4,12 +4,12 @@ import dataclasses
 import functools
 from collections.abc import Sequence
 
-import albumentations as A
 import polars as pl
 import torch
 from torch import nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader
+from torchvision.transforms import v2 as tv_transforms
 
 from geolife_clef_2024 import dataset_utils, datasets
 from geolife_clef_2024.models import common as common_models
@@ -22,9 +22,6 @@ class MultiModalEnsembleConfig(model_utils.WandbTrackedModeConfig):
 
     batch_size: int = 64
 
-    landsat_transforms: Sequence[A.TransformType] = ()
-    bio_climatic_transforms: Sequence[A.TransformType] = ()
-    sentinel_transforms: Sequence[A.TransformType] = (A.Normalize(mean=0.5, std=0.5),)
     sentinel_model: common_models.SwinTransformer = "swin_t"
     learning_rate: float = 0.00025
     num_epochs: int = 10
@@ -37,20 +34,23 @@ def train_loader_from_config(config: MultiModalEnsembleConfig):
             dataset_utils.DatasetSlicer[:2](
                 datasets.TimeSeriesDataset(
                     split="train",
-                    transforms=config.landsat_transforms,
                     which="landsat_time_series",
                 )
             ),
             dataset_utils.DatasetSlicer[1](
                 datasets.TimeSeriesDataset(
                     split="train",
-                    transforms=config.bio_climatic_transforms,
                     which="bioclimatic_monthly",
                 )
             ),
             dataset_utils.DatasetSlicer[1:](
                 datasets.SatellitePatchesDataset(
-                    split="train", transforms=config.sentinel_transforms
+                    split="train",
+                    transforms=(
+                        tv_transforms.Normalize(
+                            mean=(0.5, 0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5, 0.5)
+                        ),
+                    ),
                 )
             ),
         ),

@@ -16,6 +16,7 @@ import torch.utils
 import torch.utils.data
 import torchvision.transforms.v2 as tv_transforms
 from magicbox import polars as pl_utils
+from torch import nn
 from torch.utils.data import Dataset
 
 from geolife_clef_2024 import (
@@ -82,7 +83,7 @@ class SatellitePatchesDataset(
         self,
         split: type_aliases.Dataset,
         include_nir: bool = True,
-        transforms: Sequence[A.TransformType] = (),
+        transforms: Sequence[A.TransformType] | Sequence[tv_transforms.Transform] = (),
     ) -> None:
         """Create a torch datset containing satellite patches."""
         """Create a new dataset for a specific dataset split."""
@@ -97,19 +98,35 @@ class SatellitePatchesDataset(
             else satellite_patches.load_rgb_patch,
             split=split,
         )
-        composed_transforms = A.Compose(list(transforms))
+        composed_transforms = None
+        if transforms:
+            if isinstance(transforms[0], nn.Module):
+                composed_transforms = tv_transforms.Compose(transforms)
+            else:
+                composed_transforms = A.Compose(list(transforms))
         self._load_image = tv_transforms.Compose(
             (
                 tv_transforms.Lambda(
                     (
-                        lambda survey_id: np.dstack(
-                            [
-                                composed_transforms(image=img)["image"]
-                                for img in image_loader(survey_id=survey_id)
-                            ]
+                        (
+                            lambda survey_id: np.dstack(
+                                [
+                                    composed_transforms(img)
+                                    for img in image_loader(survey_id=survey_id)
+                                ]
+                            )
+                        )
+                        if isinstance(composed_transforms, tv_transforms.Compose)
+                        else (
+                            lambda survey_id: np.dstack(
+                                [
+                                    composed_transforms(image=img)["image"]
+                                    for img in image_loader(survey_id=survey_id)
+                                ]
+                            )
                         )
                     )
-                    if transforms
+                    if composed_transforms
                     else (
                         lambda survey_id: np.dstack(
                             list(image_loader(survey_id=survey_id))

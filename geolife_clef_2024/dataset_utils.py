@@ -7,6 +7,7 @@ from unittest import mock
 
 import PIL.Image
 import torch
+from torch import nn
 from torch.utils._pytree import tree_flatten, tree_unflatten
 from torch.utils.data import Dataset, default_collate
 from torchvision import tv_tensors
@@ -14,7 +15,6 @@ from torchvision.transforms import v2
 from torchvision.transforms.v2._utils import (
     has_any,
 )
-from torch import nn
 
 
 class DatasetSlicerMetaClass(type):

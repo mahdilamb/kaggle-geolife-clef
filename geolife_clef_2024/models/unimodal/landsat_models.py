@@ -68,7 +68,6 @@ def main(args: Sequence[str] | None = None):
     model_utils.WandbTrackedModel[LandsatModifiedResNetConfig](
         checkpoint_prefix="resnet18-with-landsat-cubes",
         config_class=LandsatModifiedResNetConfig,
-        tags=("ModifiedResNet18", "landsat", "unimodal"),
         model=common_models.ModifiedResNet18(
             [6, 4, 21],
             num_classes=datasets.load_observation_data(split="train")
