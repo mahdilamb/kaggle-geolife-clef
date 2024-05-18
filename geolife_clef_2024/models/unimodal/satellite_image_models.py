@@ -1,29 +1,24 @@
 """Models that only use the satellite images."""
 
 import dataclasses
-import os
-import re
+import functools
 from collections.abc import Sequence
 from typing import Literal
 
 import albumentations as A
-import numpy as np
 import polars as pl
 import torch
-import torchvision.models as models
-from magicbox import random as random_utils
-from torch import nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader
-from tqdm.autonotebook import tqdm
 
-import wandb
-from geolife_clef_2024 import constants, datasets, submissions
+from geolife_clef_2024 import datasets
+from geolife_clef_2024.models import common as common_models
+from geolife_clef_2024.models import utils as model_utils
 
 
 @dataclasses.dataclass()
-class Swinv2:
-    """Model using Swinv2."""
+class SatellitePatchesSwinTransformerConfig(model_utils.WandbTrackedModeConfig):
+    """Model using SwinTransformer."""
 
     batch_size: int = 64
     transforms: Sequence[A.TransformType] = (
@@ -31,189 +26,63 @@ class Swinv2:
         A.ColorJitter(p=0.2),
         A.OpticalDistortion(p=0.2),
     )
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     learning_rate: float = 0.0002
-    num_epochs: int = 10
-    positive_weight_factor: float = 1.0
+    model: common_models.SwinTransformer = "swin_v2_s"
     weights: Literal["IMAGENET1K_V1"] = "IMAGENET1K_V1"
-    run_id: str = ""
-    checkpoint_prefix = "swinv2-satellite-patchess"
-    _model: nn.Module = dataclasses.field(init=False, repr=False, compare=False)
+    num_epochs: int = 10
 
-    def __post_init__(
-        self,
-    ):
-        """Initialize the model."""
-        model = models.swin_v2_s(weights=self.weights)
-        model.features[0][0] = nn.Conv2d(4, 96, kernel_size=(4, 4), stride=(4, 4))
-        model.head = nn.Linear(
-            in_features=768,
-            out_features=datasets.load_observation_data(split="train")
-            .select(pl.col("speciesId").unique().count())
-            .collect()
-            .item(),
-            bias=True,
-        )
-        self._model = model
 
-    def _checkpoint_path(self, epoch: int):
-        return os.path.join(
-            constants.CHECKPOINT_DIR,
-            f"{self.checkpoint_prefix}-epoch_{epoch+1}.pth",
-        )
+def model_from_config(config: SatellitePatchesSwinTransformerConfig):
+    """Create the model from the config."""
+    return common_models.swin_transformer_model(
+        num_classes=datasets.load_observation_data(split="train")
+        .select(pl.col("speciesId").unique().count())
+        .collect()
+        .item(),
+        model=config.model,
+        weights=config.weights,
+    )
 
-    def _train(self):
-        run = wandb.init(
-            project=constants.WANDB_PROJECT,
-            tags=["Swinv2", "satellite-image", "unimodal"],
-            config={
-                k: v
-                for k, v in dataclasses.asdict(self).items()
-                if not k.startswith("_")
-            },
-            id=self.run_id or None,
-        )
-        model, num_epochs, positive_weight_factor, device = (
-            self._model,
-            self.num_epochs,
-            self.positive_weight_factor,
-            self.device,
-        )
-        model = model.train().to(device, dtype=torch.float32)
-        train_loader = DataLoader(
-            datasets.SatellitePatchesDataset(split="train", transforms=self.transforms),
-            batch_size=self.batch_size,
-            shuffle=True,
-            num_workers=4,
-        )
-        optimizer = torch.optim.AdamW(model.parameters(), lr=self.learning_rate)
-        scheduler = CosineAnnealingLR(optimizer, T_max=25)
 
-        for epoch in tqdm(range(num_epochs)):
-            for _, data, targets in tqdm(
-                train_loader,
-                leave=False,
-                position=1,
-            ):
-                data = data.to(device, dtype=torch.float32)
-                targets = targets.to(device, dtype=torch.float32)
+def train_loader_from_config(config: SatellitePatchesSwinTransformerConfig):
+    """Create a train_loader from config."""
+    return DataLoader(
+        datasets.SatellitePatchesDataset(split="train", transforms=config.transforms),
+        batch_size=config.batch_size,
+        shuffle=True,
+        num_workers=4,
+    )
 
-                optimizer.zero_grad()
-                outputs = model(data)
 
-                pos_weight = targets * positive_weight_factor
-                criterion = torch.nn.BCEWithLogitsLoss(pos_weight=pos_weight)
-                loss = criterion(outputs, targets)
+def test_load_from_config(config: SatellitePatchesSwinTransformerConfig):
+    """Create a test loader from config."""
+    return DataLoader(
+        datasets.SatellitePatchesDataset(split="test", transforms=config.transforms),
+        batch_size=config.batch_size,
+        shuffle=False,
+        num_workers=4,
+    )
 
-                loss.backward()
-                optimizer.step()
 
-            scheduler.step()
-            run.log(
-                {
-                    "loss": loss.item(),
-                    "lr": scheduler.get_last_lr(),
-                },
-                step=epoch,
-            )
-
-            torch.save(
-                model.state_dict(),
-                (model_path := self._checkpoint_path(epoch=epoch)),
-            )
-            run.log_model(path=model_path)
-        run.finish()
-
-    def fit(self):
-        """Fit the training data/or load a checkpoint."""
-        random_utils.set_seed(constants.SEED)
-        if os.path.exists(
-            checkpoint_path := self._checkpoint_path(self.num_epochs - 1)
-        ):
-            print(f"Loading checkpoint {checkpoint_path}")
-            self._model.train().to(self.device, dtype=torch.float32).load_state_dict(
-                torch.load(checkpoint_path)
-            )
-            return
-        wandb.login()
-        if self.run_id:
-            try:
-                api = wandb.Api()
-                last_run, *_ = api.runs(constants.WANDB_PROJECT)
-                if last_run.state == "finished":
-                    epoch_pattern = re.compile(
-                        rf"run-{self.run_id}-{self.checkpoint_prefix}-.*?epoch_(\d+)"
-                    )
-                    collections_by_epoch = {
-                        int(epoch_pattern.findall(artifact.name)[0]): artifact
-                        for artifact in api.artifact_type(
-                            type_name="model", project=constants.WANDB_PROJECT
-                        ).collections()
-                        if artifact.name.startswith(
-                            f"run-{self.run_id}-{self.checkpoint_prefix}"
-                        )
-                    }
-                    if len(collections_by_epoch):
-                        last_epoch = max(collections_by_epoch.keys())
-                        checkpoint_path = self._checkpoint_path(last_epoch - 1)
-
-                        collections_by_epoch[last_epoch].artifacts()[0].download(
-                            constants.CHECKPOINT_DIR
-                        )
-                        print(f"Loading checkpoint {checkpoint_path}")
-                        self._model.train().to(
-                            self.device, dtype=torch.float32
-                        ).load_state_dict(torch.load(checkpoint_path))
-                        return
-
-            except Exception as e:
-                print("Tried loading an old run. Failed!")
-                print(e)
-        return self._train()
-
-    @torch.inference_mode()
-    def transform(self):
-        """Get the submission output."""
-        model = self._model.eval()
-        decoder = datasets.create_species_decoder()
-        test_loader = DataLoader(
-            datasets.SatellitePatchesDataset(split="test", transforms=self.transforms),
-            batch_size=self.batch_size,
-            shuffle=False,
-            num_workers=4,
-        )
-        all_survey_ids = pl.Series("surveyId", dtype=pl.Int64)
-        all_predictions = pl.Series("predictions", dtype=pl.List(pl.Int64))
-
-        for survey_id, data in tqdm(
-            test_loader,
-            leave=False,
-            position=1,
-        ):
-            data = data.to(self.device, dtype=torch.float32)
-            outputs = torch.sigmoid(model(data))
-            all_survey_ids.extend(pl.Series(values=np.asarray(survey_id).flatten()))
-            all_predictions.extend(
-                decoder(np.argsort(-outputs.cpu().numpy(), axis=1)[:, :25])
-            )
-
-        return pl.DataFrame((all_survey_ids, all_predictions))
+def optimizer_from_config(
+    model: torch.nn.Module, config: SatellitePatchesSwinTransformerConfig
+):
+    """Create an optimizer from config."""
+    return torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
 
 
 def main(args: Sequence[str] | None = None):
-    """Allow running from the terminal."""
-    import argparse_dataclass
-
-    parser = argparse_dataclass.ArgumentParser(Swinv2)
-    for action in parser._actions:
-        if (option := action.option_strings[0]).startswith("---"):
-            parser._handle_conflict_resolve(None, [(option, action)])
-    model, _ = parser.parse_known_args(args)
-    model.fit()
-    submissions.save_predictions(
-        os.path.join(constants.ROOT_DIR, "submissions", f"swinv2-{model.run_id}.csv"),
-        model.transform(),
-    )
+    """Train/eval the model."""
+    model_utils.WandbTrackedModel[SatellitePatchesSwinTransformerConfig](
+        checkpoint_prefix="swinv2-satellite-patches",
+        config_class=SatellitePatchesSwinTransformerConfig,
+        model=model_from_config,
+        train_loader=train_loader_from_config,
+        test_loader=test_load_from_config,
+        optimizer=optimizer_from_config,
+        scheduler=functools.partial(CosineAnnealingLR, T_max=25),  # type:ignore
+        loss_factory=torch.nn.BCEWithLogitsLoss,  # type:ignore
+    ).parse_args(args=args)
 
 
 if __name__ == "__main__":
