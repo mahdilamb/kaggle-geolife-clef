@@ -100,7 +100,7 @@ class SatellitePatchesDataset(
         )
         composed_transforms = None
         if transforms:
-            composed_transforms = A.Compose(list(transforms))
+            composed_transforms = A.Compose(list(transforms), is_check_shapes=False)
         self._load_image = tv_transforms.Compose(
             (
                 tv_transforms.Lambda(
@@ -115,7 +115,7 @@ class SatellitePatchesDataset(
                     if composed_transforms
                     else (
                         lambda survey_id: np.dstack(
-                            list(image_loader(survey_id=survey_id))
+                            tuple(image_loader(survey_id=survey_id))
                         )
                     )
                 ),

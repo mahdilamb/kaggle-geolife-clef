@@ -138,7 +138,7 @@ class WandbTrackedModel(Generic[T]):
             )
 
             torch.save(
-                model.state_dict(),
+                model.eval().state_dict(),
                 (model_path := self.__checkpoint_path(epoch=epoch)),
             )
             run.log_model(path=model_path)
