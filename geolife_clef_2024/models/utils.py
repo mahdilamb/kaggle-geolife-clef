@@ -18,6 +18,7 @@ from tqdm.autonotebook import tqdm
 
 import wandb
 from geolife_clef_2024 import constants, datasets, submissions
+from geolife_clef_2024.models import metrics
 
 
 @dataclasses.dataclass()
@@ -113,13 +114,9 @@ class WandbTrackedModel(Generic[T]):
                 optimizer.zero_grad()
                 outputs = model(*data)
                 accuracies.append(
-                    torch.mean(
-                        ((torch.sigmoid(outputs) >= 0.5).long() == targets).float(),
-                        dim=1,
+                    metrics.mean_accuracy(
+                        (torch.sigmoid(outputs) >= 0.5).long(), targets
                     )
-                    .cpu()
-                    .numpy()
-                    .mean()
                 )
 
                 pos_weight = targets * positive_weight_factor
@@ -216,7 +213,7 @@ class WandbTrackedModel(Generic[T]):
         self.config, args = parser.parse_known_args(args)
         self.config.run_id = self.config.run_id or None
 
-        if any(arg == "--check" for arg in args):
+        if any(arg == "--list-runs" for arg in args):
             wandb.login()
             runs = defaultdict(list)
             for run in (
