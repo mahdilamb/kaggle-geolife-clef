@@ -108,26 +108,16 @@ class TrainDataset(Dataset):
         )
         sentinel_sample = np.concatenate((rgb_sample, nir_sample[..., None]), axis=2)
 
-        species_ids = self.label_dict.get(
-            survey_id, []
-        )  # Get list of species IDs for the survey ID
-        label = torch.zeros(NUM_CLASSES)  # Initialize label tensor
+        species_ids = self.label_dict.get(survey_id, [])
+        label = torch.zeros(NUM_CLASSES)
         for species_id in species_ids:
-            label[species_id] = (
-                1  # Set the corresponding class index to 1 for each species
-            )
+            label[species_id] = 1
 
         if isinstance(landsat_sample, torch.Tensor):
-            landsat_sample = landsat_sample.permute(
-                1, 2, 0
-            )  # Change tensor shape from (C, H, W) to (H, W, C)
-            landsat_sample = landsat_sample.numpy()  # Convert tensor to numpy array
+            landsat_sample = landsat_sample.permute(1, 2, 0).numpy()
 
         if isinstance(bioclim_sample, torch.Tensor):
-            bioclim_sample = bioclim_sample.permute(
-                1, 2, 0
-            )  # Change tensor shape from (C, H, W) to (H, W, C)
-            bioclim_sample = bioclim_sample.numpy()  # Convert tensor to numpy array
+            bioclim_sample = bioclim_sample.permute(1, 2, 0).numpy()
 
         landsat_sample = self.transform(landsat_sample)
         bioclim_sample = self.transform(bioclim_sample)
@@ -193,16 +183,10 @@ class TestDataset(TrainDataset):
         sentinel_sample = np.concatenate((rgb_sample, nir_sample[..., None]), axis=2)
 
         if isinstance(landsat_sample, torch.Tensor):
-            landsat_sample = landsat_sample.permute(
-                1, 2, 0
-            )  # Change tensor shape from (C, H, W) to (H, W, C)
-            landsat_sample = landsat_sample.numpy()  # Convert tensor to numpy array
+            landsat_sample = landsat_sample.permute(1, 2, 0).numpy()
 
         if isinstance(bioclim_sample, torch.Tensor):
-            bioclim_sample = bioclim_sample.permute(
-                1, 2, 0
-            )  # Change tensor shape from (C, H, W) to (H, W, C)
-            bioclim_sample = bioclim_sample.numpy()  # Convert tensor to numpy array
+            bioclim_sample = bioclim_sample.permute(1, 2, 0).numpy()
 
         landsat_sample = self.transform(landsat_sample)
         bioclim_sample = self.transform(bioclim_sample)
@@ -285,7 +269,6 @@ class MultimodalEnsemble(nn.Module):
 
         self.landsat_norm = nn.LayerNorm([6, 4, 21])
         self.landsat_model = models.resnet18(weights=None)
-        # Modify the first convolutional layer to accept 6 channels instead of 3
         self.landsat_model.conv1 = nn.Conv2d(
             6, 64, kernel_size=3, stride=1, padding=1, bias=False
         )
@@ -293,14 +276,12 @@ class MultimodalEnsemble(nn.Module):
 
         self.bioclim_norm = nn.LayerNorm([4, 19, 12])
         self.bioclim_model = models.resnet18(weights=None)
-        # Modify the first convolutional layer to accept 4 channels instead of 3
         self.bioclim_model.conv1 = nn.Conv2d(
             4, 64, kernel_size=3, stride=1, padding=1, bias=False
         )
         self.bioclim_model.maxpool = nn.Identity()
 
         self.sentinel_model = models.swin_t(weights="IMAGENET1K_V1")
-        # Modify the first layer to accept 4 channels instead of 3
         self.sentinel_model.features[0][0] = nn.Conv2d(
             4, 96, kernel_size=(4, 4), stride=(4, 4)
         )
@@ -367,7 +348,7 @@ def main(args: Sequence[str] | None = None):
                 outputs = model(*data)
                 predictions = torch.sigmoid(outputs).cpu().numpy()
 
-                # Sellect top-25 values as predictions
+                # Select top-25 values as predictions
                 top_25 = np.argsort(-predictions, axis=1)[:, :25]
                 if top_k_indices is None:
                     top_k_indices = top_25
