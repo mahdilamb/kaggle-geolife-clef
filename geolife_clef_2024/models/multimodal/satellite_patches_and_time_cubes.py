@@ -25,7 +25,7 @@ class MultiModalEnsembleConfig(model_utils.WandbTrackedModeConfig):
     landsat_transforms: Sequence[A.TransformType] = ()
     bio_climatic_transforms: Sequence[A.TransformType] = ()
     sentinel_transforms: Sequence[A.TransformType] = (A.Normalize(mean=0.5, std=0.5),)
-
+    sentinel_model: common_models.SwinTransformer = "swin_t"
     learning_rate: float = 0.00025
     num_epochs: int = 10
 
@@ -96,7 +96,9 @@ def optimizer_from_config(model: torch.nn.Module, config: MultiModalEnsembleConf
 class MultiModalEnsemble(nn.Module):
     """Ensemble model combining satellite patches with time cubes."""
 
-    def __init__(self, num_classes: int):
+    def __init__(
+        self, num_classes: int, sentinel_model: common_models.SwinTransformer = "swin_t"
+    ):
         """Create an ensemble of the sentinel data and the time series cubes."""
         super().__init__()
 
@@ -115,7 +117,7 @@ class MultiModalEnsemble(nn.Module):
 
         self.sentinel_model = model_utils.unhead(
             common_models.swin_transformer_model(
-                num_classes=num_classes, model="swin_t", weights="IMAGENET1K_V1"
+                num_classes=num_classes, model=sentinel_model, weights="IMAGENET1K_V1"
             )
         )
 
@@ -143,11 +145,12 @@ def main(args: Sequence[str] | None = None):
     model_utils.WandbTrackedModel[MultiModalEnsembleConfig](
         checkpoint_prefix="ensemble-nn-sentinel-time_series-cube",
         config_class=MultiModalEnsembleConfig,
-        model=MultiModalEnsemble(
-            datasets.load_observation_data(split="train")
+        model=lambda config: MultiModalEnsemble(
+            sentinel_model=config.sentinel_model,
+            num_classes=datasets.load_observation_data(split="train")
             .select(pl.col("speciesId").unique().count())
             .collect()
-            .item()
+            .item(),
         ),
         train_loader=train_loader_from_config,
         test_loader=test_load_from_config,
