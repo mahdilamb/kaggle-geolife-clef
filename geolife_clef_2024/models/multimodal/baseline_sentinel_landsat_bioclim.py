@@ -18,6 +18,7 @@ from tqdm.autonotebook import tqdm
 
 from geolife_clef_2024 import constants, dataset_utils
 from geolife_clef_2024.models import utils as model_utils
+from geolife_clef_2024.models import common as common_models
 
 NUM_CLASSES = 11255
 
@@ -30,6 +31,7 @@ class MultiModalEnsembleConfig(model_utils.WandbTrackedModeConfig):
     learning_rate: float = 0.00025
     num_epochs: int = 10
     use_mixing: bool = False
+    sentinel_model: common_models.SwinTransformer = "swin_t"
 
 
 def construct_patch_path(data_path, survey_id):
@@ -264,7 +266,9 @@ def test_load_from_config(config: MultiModalEnsembleConfig):
 
 
 class MultimodalEnsemble(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(
+        self, num_classes, swin_transformer: common_models.SwinTransformer = "swin_t"
+    ):
         super().__init__()
 
         self.landsat_norm = nn.LayerNorm([6, 4, 21])
@@ -281,7 +285,7 @@ class MultimodalEnsemble(nn.Module):
         )
         self.bioclim_model.maxpool = nn.Identity()
 
-        self.sentinel_model = models.swin_t(weights="IMAGENET1K_V1")
+        self.sentinel_model = getattr(models, swin_transformer)(weights="IMAGENET1K_V1")
         self.sentinel_model.features[0][0] = nn.Conv2d(
             4, 96, kernel_size=(4, 4), stride=(4, 4)
         )
@@ -322,7 +326,9 @@ def main(args: Sequence[str] | None = None):
     model = model_utils.WandbTrackedModel[MultiModalEnsembleConfig](
         checkpoint_prefix="baseline-sentinel-landsat-bioclim",
         config_class=MultiModalEnsembleConfig,
-        model=lambda config: MultimodalEnsemble(NUM_CLASSES),
+        model=lambda config: MultimodalEnsemble(
+            num_classes=NUM_CLASSES, swin_transformer=config.sentinel_model
+        ),
         train_loader=train_loader_from_config,
         test_loader=test_load_from_config,
         optimizer=optimizer_from_config,
