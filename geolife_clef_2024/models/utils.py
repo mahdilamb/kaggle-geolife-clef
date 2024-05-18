@@ -57,7 +57,6 @@ class WandbTrackedModel(Generic[T]):
     scheduler: type[lr_scheduler.LRScheduler]
     loss_factory: WeightedLoss = torch.nn.BCEWithLogitsLoss  # type:ignore
     tags: Sequence[str] = ()
-    run_id: str | None = None
     config_class: type[T] | None = None
     config: T | None = dataclasses.field(init=False, repr=False, default=None)
 
@@ -153,16 +152,16 @@ class WandbTrackedModel(Generic[T]):
         config = self.__safe_config
         device = torch.device(config.device)
         run = wandb.init(
-            job_type="eval" if self.run_id else "train",
+            job_type="eval" if config.run_id else "train",
             project=constants.WANDB_PROJECT,
             tags=self.tags,
             config=dataclasses.asdict(config),
-            id=self.run_id or None,
+            id=config.run_id or None,
             group=self.checkpoint_prefix,
         )
-        if self.run_id:
+        if config.run_id:
             checkpoint_path = run.use_model(
-                name=f"{run.entity}/{constants.WANDB_PROJECT}/run-{self.run_id}-{self.checkpoint_prefix}-epoch_{config.num_epochs}.pth:latest",
+                name=f"{run.entity}/{constants.WANDB_PROJECT}/run-{config.run_id}-{self.checkpoint_prefix}-epoch_{config.num_epochs}.pth:latest",
             )
             run.finish()
             self.__model.train().to(device, dtype=torch.float32).load_state_dict(
@@ -203,7 +202,7 @@ class WandbTrackedModel(Generic[T]):
             os.path.join(
                 constants.ROOT_DIR,
                 "submissions",
-                f"{self.checkpoint_prefix}-{self.run_id}.csv",
+                f"{self.checkpoint_prefix}-{self.__safe_config.run_id}.csv",
             ),
             self.transform(),
         )
@@ -215,6 +214,7 @@ class WandbTrackedModel(Generic[T]):
         parser = argparse_dataclass.ArgumentParser(self.config_class)
         self.config, args = parser.parse_known_args(args)
         self.config.run_id = self.config.run_id or None
+
         if any(arg == "--check" for arg in args):
             wandb.login()
             runs = defaultdict(list)
