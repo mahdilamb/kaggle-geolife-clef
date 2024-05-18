@@ -93,7 +93,7 @@ def optimizer_from_config(model: torch.nn.Module, config: MultiModalEnsembleConf
     return torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
 
 
-class MultiNodalEnsemble(nn.Module):
+class MultiModalEnsemble(nn.Module):
     """Ensemble model combining satellite patches with time cubes."""
 
     def __init__(self, num_classes: int):
@@ -143,7 +143,7 @@ def main(args: Sequence[str] | None = None):
     model_utils.WandbTrackedModel[MultiModalEnsembleConfig](
         checkpoint_prefix="ensemble-nn-sentinel+time_series-cube",
         config_class=MultiModalEnsembleConfig,
-        model=MultiNodalEnsemble(
+        model=MultiModalEnsemble(
             datasets.load_observation_data(split="train")
             .select(pl.col("speciesId").unique().count())
             .collect()
