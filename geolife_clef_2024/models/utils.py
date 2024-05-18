@@ -150,6 +150,7 @@ class WandbTrackedModel(Generic[T]):
         config = self.__safe_config
         device = torch.device(config.device)
         full_config = dataclasses.asdict(config) | {"seed": constants.SEED}
+        full_config.pop("run_id", None)
         print(f"Training with config {full_config}.")
         run = wandb.init(
             job_type="eval" if config.run_id else "train",
@@ -216,7 +217,6 @@ class WandbTrackedModel(Generic[T]):
         parser = argparse_dataclass.ArgumentParser(self.config_class)
         self.config, args = parser.parse_known_args(args)
         self.config.run_id = self.config.run_id or None
-
         if any(arg == "--list-runs" for arg in args):
             wandb.login()
             runs = defaultdict(list)
@@ -234,7 +234,8 @@ class WandbTrackedModel(Generic[T]):
                 for run_id in run_ids:
                     print(f"- {run_id}")
             exit(0)
-
+        if args:
+            raise ValueError(f"Could not parse {args}")
         self.fit()
         self.save_submission()
 
