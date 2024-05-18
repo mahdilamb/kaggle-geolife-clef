@@ -46,10 +46,8 @@ def train_loader_from_config(config: MultiModalEnsembleConfig):
             dataset_utils.DatasetSlicer[1:](
                 datasets.SatellitePatchesDataset(
                     split="train",
-                    transforms=(
-                        tv_transforms.Normalize(
-                            mean=(0.5, 0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5, 0.5)
-                        ),
+                    normalize=tv_transforms.Normalize(
+                        mean=(0.5, 0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5, 0.5)
                     ),
                 )
             ),

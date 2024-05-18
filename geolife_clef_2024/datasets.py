@@ -16,7 +16,6 @@ import torch.utils
 import torch.utils.data
 import torchvision.transforms.v2 as tv_transforms
 from magicbox import polars as pl_utils
-from torch import nn
 from torch.utils.data import Dataset
 
 from geolife_clef_2024 import (
@@ -83,7 +82,8 @@ class SatellitePatchesDataset(
         self,
         split: type_aliases.Dataset,
         include_nir: bool = True,
-        transforms: Sequence[A.TransformType] | Sequence[tv_transforms.Transform] = (),
+        transforms: Sequence[A.TransformType] = (),
+        normalize: tv_transforms.Normalize | None = None,
     ) -> None:
         """Create a torch datset containing satellite patches."""
         """Create a new dataset for a specific dataset split."""
@@ -100,32 +100,16 @@ class SatellitePatchesDataset(
         )
         composed_transforms = None
         if transforms:
-            if isinstance(transforms[0], nn.Module):
-                composed_transforms = tv_transforms.Compose(transforms)
-            else:
-                composed_transforms = A.Compose(list(transforms))
+            composed_transforms = A.Compose(list(transforms))
         self._load_image = tv_transforms.Compose(
             (
-                tv_transforms.ToImage(),
-                tv_transforms.ToDtype(torch.float32, scale=True),
                 tv_transforms.Lambda(
                     (
-                        (
-                            lambda survey_id: np.dstack(
-                                [
-                                    composed_transforms(img)
-                                    for img in image_loader(survey_id=survey_id)
-                                ]
-                            )
-                        )
-                        if isinstance(composed_transforms, tv_transforms.Compose)
-                        else (
-                            lambda survey_id: np.dstack(
-                                [
-                                    composed_transforms(image=img)["image"]
-                                    for img in image_loader(survey_id=survey_id)
-                                ]
-                            )
+                        lambda survey_id: np.dstack(
+                            [
+                                composed_transforms(image=img)["image"]
+                                for img in image_loader(survey_id=survey_id)
+                            ]
                         )
                     )
                     if composed_transforms
@@ -135,7 +119,10 @@ class SatellitePatchesDataset(
                         )
                     )
                 ),
+                tv_transforms.ToImage(),
+                tv_transforms.ToDtype(torch.float32, scale=True),
             )
+            + ((normalize,) if normalize is not None else ())
         )
 
         self._get_label = create_species_encoder()
