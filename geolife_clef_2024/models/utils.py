@@ -141,6 +141,7 @@ class WandbTrackedModel(Generic[T]):
                 (model_path := self.__checkpoint_path(epoch=epoch)),
             )
             run.log_model(path=model_path)
+
         run.finish()
 
     def fit(self):
@@ -148,11 +149,13 @@ class WandbTrackedModel(Generic[T]):
         random_utils.set_seed(constants.SEED)
         config = self.__safe_config
         device = torch.device(config.device)
+        full_config = dataclasses.asdict(config) | {"seed": constants.SEED}
+        print(f"Training with config {full_config}.")
         run = wandb.init(
             job_type="eval" if config.run_id else "train",
             project=constants.WANDB_PROJECT,
             tags=self.tags,
-            config=dataclasses.asdict(config),
+            config=full_config,
             id=config.run_id or None,
             group=self.checkpoint_prefix,
         )
@@ -161,11 +164,12 @@ class WandbTrackedModel(Generic[T]):
                 name=f"{run.entity}/{constants.WANDB_PROJECT}/run-{config.run_id}-{self.checkpoint_prefix}-epoch_{config.num_epochs}.pth:latest",
             )
             run.finish()
+            # TODO update model with config
             self.__model.train().to(device, dtype=torch.float32).load_state_dict(
                 torch.load(checkpoint_path, map_location=device)
             )
             return
-
+        self.config.run_id = run.id
         return self._train(run)
 
     @torch.inference_mode()
