@@ -141,7 +141,7 @@ class MultiModalEnsemble(nn.Module):
 def main(args: Sequence[str] | None = None):
     """Train/eval the model."""
     model_utils.WandbTrackedModel[MultiModalEnsembleConfig](
-        checkpoint_prefix="ensemble-nn-sentinel+time_series-cube",
+        checkpoint_prefix="ensemble-nn-sentinel-time_series-cube",
         config_class=MultiModalEnsembleConfig,
         model=MultiModalEnsemble(
             datasets.load_observation_data(split="train")

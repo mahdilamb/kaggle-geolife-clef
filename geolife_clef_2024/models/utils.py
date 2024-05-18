@@ -2,6 +2,7 @@
 
 import dataclasses
 import os
+from collections import defaultdict
 from collections.abc import Callable, Sequence
 from typing import Generic, Protocol, TypeVar
 
@@ -213,10 +214,25 @@ class WandbTrackedModel(Generic[T]):
             raise ValueError("Must supply a config class to to parse args.")
         parser = argparse_dataclass.ArgumentParser(self.config_class)
         self.config, args = parser.parse_known_args(args)
-        if any(arg == "--check" for arg in args):
-            # TODO print available runs.
-            raise Exception("Checking is currently not supported")
         self.config.run_id = self.config.run_id or None
+        if any(arg == "--check" for arg in args):
+            wandb.login()
+            runs = defaultdict(list)
+            for run in (
+                run
+                for run in wandb.Api().runs(
+                    path=f"{wandb.setup()._get_entity()}/{constants.WANDB_PROJECT}",
+                )
+                if run.group == self.checkpoint_prefix
+            ):
+                runs[run.state].append(run.id)
+            print(f"Wandb runs from group '{self.checkpoint_prefix}'")
+            for state, run_ids in runs.items():
+                print(f"{state.title()}:")
+                for run_id in run_ids:
+                    print(f"- {run_id}")
+            exit(0)
+
         self.fit()
         self.save_submission()
 
