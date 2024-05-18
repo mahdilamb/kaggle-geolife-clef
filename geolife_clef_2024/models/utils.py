@@ -165,7 +165,7 @@ class WandbTrackedModel(Generic[T]):
             )
             run.finish()
             self.__model.train().to(device, dtype=torch.float32).load_state_dict(
-                torch.load(checkpoint_path)
+                torch.load(checkpoint_path, map_location=device)
             )
             return
 
@@ -175,10 +175,11 @@ class WandbTrackedModel(Generic[T]):
     def transform(self):
         """Get the submission output."""
         config = self.__safe_config
-        model = self.__model.eval()
+        device = torch.device(config.device)
+        model = self.__model.eval().to(device=device, dtype=torch.float32)
         decoder = datasets.create_species_decoder()
         test_loader = self.test_loader(config)
-        device = torch.device(config.device)
+
         all_survey_ids = pl.Series("surveyId", dtype=pl.Int64)
         all_predictions = pl.Series("predictions", dtype=pl.List(pl.Int64))
 
