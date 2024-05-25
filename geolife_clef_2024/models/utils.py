@@ -103,7 +103,6 @@ class WandbTrackedModel(Generic[T]):
         scheduler = self.scheduler(optimizer)
         criterion_factory = self.loss_factory
         for epoch in tqdm(range(num_epochs)):
-            accuracies = []
             for _, *data, targets in tqdm(
                 train_loader,
                 leave=False,
@@ -113,12 +112,7 @@ class WandbTrackedModel(Generic[T]):
                 targets = targets.to(device, dtype=torch.float32)
 
                 optimizer.zero_grad()
-                outputs = model(*data)
-                accuracies.append(
-                    metrics.mean_accuracy(
-                        (torch.sigmoid(outputs) >= 0.5).long(), targets
-                    )
-                )
+                outputs: torch.Tensor = model(*data)
 
                 pos_weight = targets * positive_weight_factor
                 criterion = criterion_factory(pos_weight=pos_weight)
@@ -132,7 +126,6 @@ class WandbTrackedModel(Generic[T]):
                 {
                     "loss": loss.item(),
                     "lr": scheduler.get_last_lr(),
-                    "train/accuracy": np.mean(accuracies),
                 },
                 step=epoch,
             )

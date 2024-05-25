@@ -5,3 +5,4 @@ magicbox[polars] @ git+ssh://git@github.com/mahdilamb/magicbox@v0.4.0
 torch
 wandb
 Pillow
+sentence-transformers
