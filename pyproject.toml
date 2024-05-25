@@ -2,7 +2,7 @@
 dynamic = ["version", "readme", "dependencies"]
 license = {file = "LICENCE"}
 name = "geolife-clef-2024"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 
 [tool.setuptools.dynamic]
 dependencies = {file = "requirements.txt"}
@@ -12,7 +12,7 @@ version = {attr = "geolife_clef_2024.__version__"}
 [project.optional-dependencies]
 all = ["geolife-clef-2024[dev,eda,training]"]
 dev = ["pip-tools", "ruff", "geolife-clef-2024[test]", 'mypy', 'pandas-stubs']
-eda = ['plotly', 'kaleido', 'seaborn', 'magicbox[notebook] @ git+ssh://git@github.com/mahdilamb/magicbox@v0.4.0']
+eda = ['plotly', 'kaleido', 'seaborn', 'magicbox[notebook] @ git+ssh://git@github.com/mahdilamb/magicbox@v0.4.0', 'ipywidgets']
 test = ["pytest", "pytest-cov"]
 training = [
   'scikit-learn',
@@ -21,6 +21,7 @@ training = [
   'reverse_geocoder',
   'tqdm',
   'argparse-dataclass',
+  'torch-tb-profiler',
 ]
 [tool.setuptools.package-dir]
 "geolife_clef_2024" = "geolife_clef_2024"

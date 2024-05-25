@@ -10,7 +10,7 @@ import torch
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader
 
-from geolife_clef_2024 import datasets
+from geolife_clef_2024 import dataset_utils, datasets
 from geolife_clef_2024.models import common as common_models
 from geolife_clef_2024.models import utils as model_utils
 
@@ -22,10 +22,19 @@ class BioClimaticModifiedResNetConfig(model_utils.WandbTrackedModeConfig):
     batch_size: int = 64
     transforms: Sequence[A.TransformType] = ()
     learning_rate: float = 0.0002
+    use_mixing: bool = False
 
 
 def train_loader_from_config(config: BioClimaticModifiedResNetConfig):
     """Create a train_loader from config."""
+    collate_fn = None
+    if config.use_mixing:
+        collate_fn = dataset_utils.create_cutmix_or_mixup_collate_function(
+            datasets.load_observation_data(split="train")
+            .select(pl.col("speciesId").unique().count())
+            .collect()
+            .item()
+        )
     return DataLoader(
         datasets.TimeSeriesDataset(
             split="train", transforms=config.transforms, which="bioclimatic_monthly"
@@ -33,6 +42,7 @@ def train_loader_from_config(config: BioClimaticModifiedResNetConfig):
         batch_size=config.batch_size,
         shuffle=True,
         num_workers=4,
+        collate_fn=collate_fn,
     )
 
 

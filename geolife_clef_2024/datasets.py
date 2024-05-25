@@ -83,6 +83,7 @@ class SatellitePatchesDataset(
         split: type_aliases.Dataset,
         include_nir: bool = True,
         transforms: Sequence[A.TransformType] = (),
+        normalize: tv_transforms.Normalize | None = None,
     ) -> None:
         """Create a torch datset containing satellite patches."""
         """Create a new dataset for a specific dataset split."""
@@ -97,7 +98,9 @@ class SatellitePatchesDataset(
             else satellite_patches.load_rgb_patch,
             split=split,
         )
-        composed_transforms = A.Compose(list(transforms))
+        composed_transforms = None
+        if transforms:
+            composed_transforms = A.Compose(list(transforms), is_check_shapes=False)
         self._load_image = tv_transforms.Compose(
             (
                 tv_transforms.Lambda(
@@ -109,16 +112,17 @@ class SatellitePatchesDataset(
                             ]
                         )
                     )
-                    if transforms
+                    if composed_transforms
                     else (
                         lambda survey_id: np.dstack(
-                            list(image_loader(survey_id=survey_id))
+                            tuple(image_loader(survey_id=survey_id))
                         )
                     )
                 ),
                 tv_transforms.ToImage(),
                 tv_transforms.ToDtype(torch.float32, scale=True),
             )
+            + ((normalize,) if normalize is not None else ())
         )
 
         self._get_label = create_species_encoder()

@@ -2,6 +2,7 @@
 
 import dataclasses
 import os
+from collections import defaultdict
 from collections.abc import Callable, Sequence
 from typing import Generic, Protocol, TypeVar
 
@@ -17,6 +18,7 @@ from tqdm.autonotebook import tqdm
 
 import wandb
 from geolife_clef_2024 import constants, datasets, submissions
+from geolife_clef_2024.models import metrics
 
 
 @dataclasses.dataclass()
@@ -56,7 +58,6 @@ class WandbTrackedModel(Generic[T]):
     scheduler: type[lr_scheduler.LRScheduler]
     loss_factory: WeightedLoss = torch.nn.BCEWithLogitsLoss  # type:ignore
     tags: Sequence[str] = ()
-    run_id: str | None = None
     config_class: type[T] | None = None
     config: T | None = dataclasses.field(init=False, repr=False, default=None)
 
@@ -87,6 +88,7 @@ class WandbTrackedModel(Generic[T]):
         return self.config
 
     def _train(self, run):
+        random_utils.set_seed(constants.SEED)
         config = self.__safe_config
         model, num_epochs, positive_weight_factor, device = (
             self.__model,
@@ -101,7 +103,6 @@ class WandbTrackedModel(Generic[T]):
         scheduler = self.scheduler(optimizer)
         criterion_factory = self.loss_factory
         for epoch in tqdm(range(num_epochs)):
-            accuracies = []
             for _, *data, targets in tqdm(
                 train_loader,
                 leave=False,
@@ -111,16 +112,7 @@ class WandbTrackedModel(Generic[T]):
                 targets = targets.to(device, dtype=torch.float32)
 
                 optimizer.zero_grad()
-                outputs = model(*data)
-                accuracies.append(
-                    torch.mean(
-                        ((torch.sigmoid(outputs) >= 0.5).long() == targets).float(),
-                        dim=1,
-                    )
-                    .cpu()
-                    .numpy()
-                    .mean()
-                )
+                outputs: torch.Tensor = model(*data)
 
                 pos_weight = targets * positive_weight_factor
                 criterion = criterion_factory(pos_weight=pos_weight)
@@ -134,51 +126,55 @@ class WandbTrackedModel(Generic[T]):
                 {
                     "loss": loss.item(),
                     "lr": scheduler.get_last_lr(),
-                    "train/accuracy": np.mean(accuracies),
                 },
                 step=epoch,
             )
 
             torch.save(
-                model.state_dict(),
+                model.eval().state_dict(),
                 (model_path := self.__checkpoint_path(epoch=epoch)),
             )
             run.log_model(path=model_path)
+
         run.finish()
 
     def fit(self):
         """Fit the training data/or load a checkpoint."""
-        random_utils.set_seed(constants.SEED)
         config = self.__safe_config
         device = torch.device(config.device)
+        full_config = dataclasses.asdict(config) | {"seed": constants.SEED}
+        full_config.pop("run_id", None)
+        print(f"Training with config {full_config}.")
         run = wandb.init(
-            job_type="eval" if self.run_id else "train",
+            job_type="eval" if config.run_id else "train",
             project=constants.WANDB_PROJECT,
             tags=self.tags,
-            config=dataclasses.asdict(config),
-            id=self.run_id or None,
+            config=full_config,
+            id=config.run_id or None,
             group=self.checkpoint_prefix,
         )
-        if self.run_id:
+        if config.run_id:
             checkpoint_path = run.use_model(
-                name=f"{run.entity}/{constants.WANDB_PROJECT}/run-{self.run_id}-{self.checkpoint_prefix}-epoch_{config.num_epochs}.pth:latest",
+                name=f"{run.entity}/{constants.WANDB_PROJECT}/run-{config.run_id}-{self.checkpoint_prefix}-epoch_{config.num_epochs}.pth:latest",
             )
             run.finish()
+            # TODO update model with config
             self.__model.train().to(device, dtype=torch.float32).load_state_dict(
-                torch.load(checkpoint_path)
+                torch.load(checkpoint_path, map_location=device)
             )
             return
-
+        self.config.run_id = run.id
         return self._train(run)
 
     @torch.inference_mode()
     def transform(self):
         """Get the submission output."""
         config = self.__safe_config
-        model = self.__model.eval()
+        device = torch.device(config.device)
+        model = self.__model.eval().to(device=device, dtype=torch.float32)
         decoder = datasets.create_species_decoder()
         test_loader = self.test_loader(config)
-        device = torch.device(config.device)
+
         all_survey_ids = pl.Series("surveyId", dtype=pl.Int64)
         all_predictions = pl.Series("predictions", dtype=pl.List(pl.Int64))
 
@@ -202,7 +198,7 @@ class WandbTrackedModel(Generic[T]):
             os.path.join(
                 constants.ROOT_DIR,
                 "submissions",
-                f"{self.checkpoint_prefix}-{self.run_id}.csv",
+                f"{self.checkpoint_prefix}-{self.__safe_config.run_id}.csv",
             ),
             self.transform(),
         )
@@ -213,10 +209,26 @@ class WandbTrackedModel(Generic[T]):
             raise ValueError("Must supply a config class to to parse args.")
         parser = argparse_dataclass.ArgumentParser(self.config_class)
         self.config, args = parser.parse_known_args(args)
-        if any(arg == "--check" for arg in args):
-            # TODO print available runs.
-            raise Exception("Checking is currently not supported")
         self.config.run_id = self.config.run_id or None
+        if any(arg == "--list-runs" for arg in args):
+            wandb.login()
+            runs = defaultdict(list)
+            for run in (
+                run
+                for run in wandb.Api().runs(
+                    path=f"{wandb.setup()._get_entity()}/{constants.WANDB_PROJECT}",
+                )
+                if run.group == self.checkpoint_prefix
+            ):
+                runs[run.state].append(run.id)
+            print(f"Wandb runs from group '{self.checkpoint_prefix}'")
+            for state, run_ids in runs.items():
+                print(f"{state.title()}:")
+                for run_id in run_ids:
+                    print(f"- {run_id}")
+            exit(0)
+        if args:
+            raise ValueError(f"Could not parse {args}")
         self.fit()
         self.save_submission()
 

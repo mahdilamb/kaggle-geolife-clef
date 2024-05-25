@@ -11,7 +11,7 @@ import torch
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader
 
-from geolife_clef_2024 import datasets
+from geolife_clef_2024 import dataset_utils, datasets
 from geolife_clef_2024.models import common as common_models
 from geolife_clef_2024.models import utils as model_utils
 
@@ -30,6 +30,7 @@ class SatellitePatchesSwinTransformerConfig(model_utils.WandbTrackedModeConfig):
     model: common_models.SwinTransformer = "swin_v2_s"
     weights: Literal["IMAGENET1K_V1"] = "IMAGENET1K_V1"
     num_epochs: int = 10
+    use_mixing: bool = False
 
 
 def model_from_config(config: SatellitePatchesSwinTransformerConfig):
@@ -46,11 +47,20 @@ def model_from_config(config: SatellitePatchesSwinTransformerConfig):
 
 def train_loader_from_config(config: SatellitePatchesSwinTransformerConfig):
     """Create a train_loader from config."""
+    collate_fn = None
+    if config.use_mixing:
+        collate_fn = dataset_utils.create_cutmix_or_mixup_collate_function(
+            datasets.load_observation_data(split="train")
+            .select(pl.col("speciesId").unique().count())
+            .collect()
+            .item()
+        )
     return DataLoader(
         datasets.SatellitePatchesDataset(split="train", transforms=config.transforms),
         batch_size=config.batch_size,
         shuffle=True,
         num_workers=4,
+        collate_fn=collate_fn,
     )
 
 
